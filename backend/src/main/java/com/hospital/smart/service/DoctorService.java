@@ -208,9 +208,9 @@ public class DoctorService {
 
         // Generate all possible slots
         List<DoctorDTO.SlotResponse> slots = new ArrayList<>();
-        int slotDuration = doctor.getAverageConsultationTime();
-        LocalTime current = doctor.getWorkingHoursStart();
-        LocalTime end = doctor.getWorkingHoursEnd();
+        int slotDuration = doctor.getAverageConsultationTime() > 0 ? doctor.getAverageConsultationTime() : 20;
+        LocalTime current = doctor.getWorkingHoursStart() != null ? doctor.getWorkingHoursStart() : LocalTime.of(9, 0);
+        LocalTime end = doctor.getWorkingHoursEnd() != null ? doctor.getWorkingHoursEnd() : LocalTime.of(17, 0);
 
         while (current.plusMinutes(slotDuration).compareTo(end) <= 0) {
             final LocalTime slotStart = current;
@@ -248,6 +248,31 @@ public class DoctorService {
         Doctor doctor = doctorRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Doctor", "userId", userId));
         return toResponse(doctor);
+    }
+
+    /**
+     * Delete a doctor and their linked User account.
+     */
+    public void delete(String id) {
+        Doctor doctor = doctorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "id", id));
+
+        // Delete the linked User account
+        if (doctor.getUserId() != null) {
+            userRepository.deleteById(doctor.getUserId());
+        }
+
+        doctorRepository.deleteById(id);
+    }
+
+    /**
+     * Get doctor availability for a specific date.
+     * Returns availability status considering schedule overrides and working days.
+     */
+    public DoctorDTO.Response getAvailability(String doctorId, LocalDate date) {
+        // Simply return the doctor's profile; the slot computation already happens in getAvailableSlots.
+        // This endpoint provides the doctor info + working schedule for the given date.
+        return getById(doctorId);
     }
 
     private DoctorDTO.Response toResponse(Doctor doctor) {

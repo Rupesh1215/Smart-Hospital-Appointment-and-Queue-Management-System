@@ -14,6 +14,7 @@ import {
   MdWifi,
   MdWifiOff,
 } from 'react-icons/md';
+import './PatientQueue.css';
 
 export default function PatientQueue() {
   const { user } = useAuth();
@@ -100,8 +101,8 @@ export default function PatientQueue() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      <div className="pat-queue-loader-wrap">
+        <div className="pat-queue-loader" />
       </div>
     );
   }
@@ -113,48 +114,48 @@ export default function PatientQueue() {
     );
 
     return (
-      <div className="space-y-6 animate-fade-in">
-        <h1 className="text-2xl font-bold text-slate-900">Queue Status</h1>
+      <div className="pat-queue-page">
+        <h1 className="pat-queue-title">Queue Status</h1>
 
-        <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center shadow-sm">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-slate-50 flex items-center justify-center">
-            <MdPeople className="text-4xl text-slate-300" />
+        <div className="pat-queue-empty-state">
+          <div className="pat-queue-empty-icon">
+            <MdPeople />
           </div>
-          <h3 className="text-lg font-semibold text-slate-700 mb-2">
+          <h3 className="pat-queue-empty-title">
             Not in Queue
           </h3>
-          <p className="text-slate-500 text-sm max-w-sm mx-auto">
+          <p className="pat-queue-empty-desc">
             You're not currently in any queue. Check in at the reception desk or through your appointment to join a queue.
           </p>
         </div>
 
         {/* Pending appointments that can be checked in */}
         {appointments.filter((a) => ['PENDING', 'CONFIRMED'].includes(a.status)).length > 0 && (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-700">Pending Appointments</h3>
-              <p className="text-xs text-slate-500 mt-1">
+          <div className="pat-queue-pending-card">
+            <div className="pat-queue-pending-header">
+              <h3 className="pat-queue-pending-title">Pending Appointments</h3>
+              <p className="pat-queue-pending-subtitle">
                 Visit the reception to check in for your appointment
               </p>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="pat-queue-pending-list">
               {appointments
                 .filter((a) => ['PENDING', 'CONFIRMED'].includes(a.status))
                 .slice(0, 3)
                 .map((apt) => (
-                  <div key={apt.id} className="p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
-                      <MdHourglassTop className="text-lg text-amber-600" />
+                  <div key={apt.id} className="pat-queue-pending-item">
+                    <div className="pat-queue-pending-icon">
+                      <MdHourglassTop />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900">
+                    <div className="pat-queue-pending-info">
+                      <p className="pat-queue-pending-name">
                         Dr. {apt.doctorName}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="pat-queue-pending-time">
                         {apt.startTime && formatTime(apt.startTime)}
                       </p>
                     </div>
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-700">
+                    <span className="pat-queue-pending-badge">
                       {apt.status}
                     </span>
                   </div>
@@ -168,49 +169,49 @@ export default function PatientQueue() {
 
   // Active queue — show position
   const statusConfig = {
-    WAITING: { icon: MdHourglassTop, label: 'Waiting', color: 'from-amber-500 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
-    CALLED: { icon: MdAccessTime, label: 'Called - Please proceed', color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
-    IN_CONSULTATION: { icon: MdLocalHospital, label: 'In Consultation', color: 'from-teal-500 to-teal-600', bg: 'bg-teal-50', text: 'text-teal-600' },
-    COMPLETED: { icon: MdCheckCircle, label: 'Completed', color: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    WAITING: { icon: MdHourglassTop, class: 'WAITING' },
+    CALLED: { icon: MdAccessTime, class: 'CALLED' },
+    IN_CONSULTATION: { icon: MdLocalHospital, class: 'IN_CONSULTATION' },
+    COMPLETED: { icon: MdCheckCircle, class: 'COMPLETED' },
   };
 
   const currentStatus = statusConfig[queueData.status] || statusConfig.WAITING;
   const StatusIcon = currentStatus.icon;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Queue Status</h1>
-        <div className="flex items-center gap-2">
+    <div className="pat-queue-page">
+      <div className="pat-queue-header">
+        <h1 className="pat-queue-title">Queue Status</h1>
+        <div className="pat-queue-actions">
           {connected ? (
-            <span className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg">
-              <MdWifi className="text-sm" />
+            <span className="pat-queue-status-badge live">
+              <MdWifi />
               Live
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
-              <MdWifiOff className="text-sm" />
+            <span className="pat-queue-status-badge offline">
+              <MdWifiOff />
               Offline
             </span>
           )}
           <button
             onClick={fetchData}
-            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="pat-queue-refresh-btn"
           >
-            <MdRefresh className="text-lg" />
+            <MdRefresh />
           </button>
         </div>
       </div>
 
       {/* Queue Position Card */}
-      <div className={`bg-gradient-to-br ${currentStatus.color} rounded-2xl p-8 text-white text-center shadow-lg`}>
-        <StatusIcon className="text-5xl mx-auto mb-4 opacity-90" />
+      <div className={`pat-queue-active-card ${currentStatus.class}`}>
+        <StatusIcon className="pat-queue-active-icon" />
 
         {queueData.status === 'WAITING' ? (
           <>
-            <p className="text-white/80 text-sm mb-2">Your position in queue</p>
-            <p className="text-6xl font-bold mb-2">{queueData.position}</p>
-            <p className="text-white/80 text-sm">
+            <p className="pat-queue-active-label">Your position in queue</p>
+            <p className="pat-queue-active-main">{queueData.position}</p>
+            <p className="pat-queue-active-desc">
               {queueData.position === 1
                 ? "You're next!"
                 : `${queueData.position - 1} patient${queueData.position - 1 > 1 ? 's' : ''} ahead of you`}
@@ -218,54 +219,54 @@ export default function PatientQueue() {
           </>
         ) : queueData.status === 'CALLED' ? (
           <>
-            <p className="text-2xl font-bold mb-2">You've Been Called!</p>
-            <p className="text-white/80 text-sm">Please proceed to the doctor's room</p>
+            <p className="pat-queue-active-title">You've Been Called!</p>
+            <p className="pat-queue-active-desc">Please proceed to the doctor's room</p>
           </>
         ) : queueData.status === 'IN_CONSULTATION' ? (
           <>
-            <p className="text-2xl font-bold mb-2">In Consultation</p>
-            <p className="text-white/80 text-sm">With Dr. {queueData.doctorName}</p>
+            <p className="pat-queue-active-title">In Consultation</p>
+            <p className="pat-queue-active-desc">With Dr. {queueData.doctorName}</p>
           </>
         ) : (
           <>
-            <p className="text-2xl font-bold mb-2">Consultation Complete</p>
-            <p className="text-white/80 text-sm">Thank you for your visit</p>
+            <p className="pat-queue-active-title">Consultation Complete</p>
+            <p className="pat-queue-active-desc">Thank you for your visit</p>
           </>
         )}
       </div>
 
       {/* Details Card */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-slate-700 mb-4">Appointment Details</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between py-2 border-b border-slate-50">
-            <span className="text-sm text-slate-500">Doctor</span>
-            <span className="text-sm font-medium text-slate-900">
+      <div className="pat-queue-details-card">
+        <h3 className="pat-queue-details-title">Appointment Details</h3>
+        <div className="pat-queue-details-list">
+          <div className="pat-queue-details-row">
+            <span className="pat-queue-details-label">Doctor</span>
+            <span className="pat-queue-details-val">
               Dr. {queueData.doctorName}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b border-slate-50">
-            <span className="text-sm text-slate-500">Department</span>
-            <span className="text-sm font-medium text-slate-900">
+          <div className="pat-queue-details-row">
+            <span className="pat-queue-details-label">Department</span>
+            <span className="pat-queue-details-val">
               {queueData.departmentName || '—'}
             </span>
           </div>
-          <div className="flex justify-between py-2 border-b border-slate-50">
-            <span className="text-sm text-slate-500">Queue Number</span>
-            <span className="text-sm font-semibold text-teal-600">#{queueData.queueNumber}</span>
+          <div className="pat-queue-details-row">
+            <span className="pat-queue-details-label">Queue Number</span>
+            <span className="pat-queue-details-val highlight-teal">#{queueData.queueNumber}</span>
           </div>
           {queueData.status === 'WAITING' && queueData.estimatedWaitingTime > 0 && (
-            <div className="flex justify-between py-2 border-b border-slate-50">
-              <span className="text-sm text-slate-500">Estimated Wait</span>
-              <span className="text-sm font-medium text-amber-600">
+            <div className="pat-queue-details-row">
+              <span className="pat-queue-details-label">Estimated Wait</span>
+              <span className="pat-queue-details-val highlight-amber">
                 {formatWaitingTime(queueData.estimatedWaitingTime)}
               </span>
             </div>
           )}
           {queueData.appointmentTime && (
-            <div className="flex justify-between py-2">
-              <span className="text-sm text-slate-500">Scheduled Time</span>
-              <span className="text-sm font-medium text-slate-900">
+            <div className="pat-queue-details-row">
+              <span className="pat-queue-details-label">Scheduled Time</span>
+              <span className="pat-queue-details-val">
                 {formatTime(queueData.appointmentTime)}
               </span>
             </div>

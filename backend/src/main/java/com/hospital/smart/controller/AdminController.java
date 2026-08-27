@@ -9,6 +9,7 @@ import com.hospital.smart.model.enums.Role;
 import com.hospital.smart.repository.AuditLogRepository;
 import com.hospital.smart.repository.HospitalSettingsRepository;
 import com.hospital.smart.repository.UserRepository;
+import com.hospital.smart.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,7 @@ public class AdminController {
     private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
     private final HospitalSettingsRepository hospitalSettingsRepository;
+    private final AuditLogService auditLogService;
 
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
@@ -38,6 +40,8 @@ public class AdminController {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
         user.setRole(role);
         User updated = userRepository.save(user);
+        auditLogService.logAdmin(null, "USER_ROLE_CHANGED", "User", id,
+                "User role changed to " + role + " for: " + user.getEmail());
         return ResponseEntity.ok(ApiResponse.success("User role updated to " + role, updated));
     }
 
@@ -47,6 +51,8 @@ public class AdminController {
             throw new ResourceNotFoundException("User not found: " + id);
         }
         userRepository.deleteById(id);
+        auditLogService.logAdmin(null, "USER_DELETED", "User", id,
+                "User deleted: " + id);
         return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 

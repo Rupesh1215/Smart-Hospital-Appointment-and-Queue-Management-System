@@ -1,0 +1,174 @@
+/* DoctorProfile.css */
+
+.doc-profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.doc-profile-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.doc-profile-subtitle { font-size: 0.875rem; color: #64748b; margin: 0.25rem 0 0 0; }
+
+.dp-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.dp-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 1.25rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dp-card-title svg { color: #2563eb; }
+
+/* Info Grid */
+.dp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .dp-info-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .dp-info-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+.dp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dp-field-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin: 0;
+}
+
+.dp-field-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  margin: 0;
+}
+
+/* Form */
+.dp-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .dp-form-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.dp-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dp-input-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.dp-input-group input,
+.dp-input-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.dp-input-group input:focus,
+.dp-input-group select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Working Days */
+.dp-days-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dp-day-chip {
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  transition: all 0.15s;
+}
+
+.dp-day-chip.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+/* Save Button */
+.dp-save-row {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+}
+
+.dp-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dp-save-btn:hover { background: #1d4ed8; }
+.dp-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Availability Badge */
+.dp-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dp-availability.available { background: #dcfce7; color: #166534; }
+.dp-availability.unavailable { background: #fee2e2; color: #991b1b; }

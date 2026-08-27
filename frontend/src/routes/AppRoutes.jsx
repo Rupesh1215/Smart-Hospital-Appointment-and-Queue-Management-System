@@ -17,34 +17,45 @@ import PatientProfile from '../pages/patient/PatientProfile';
 
 // Doctor pages
 import DoctorDashboard from '../pages/doctor/DoctorDashboard';
+import DoctorAppointments from '../pages/doctor/DoctorAppointments';
+import DoctorQueue from '../pages/doctor/DoctorQueue';
+import DoctorProfile from '../pages/doctor/DoctorProfile';
 
 // Receptionist pages
 import ReceptionistDashboard from '../pages/receptionist/ReceptionistDashboard';
 import ReceptionistPatients from '../pages/receptionist/ReceptionistPatients';
+import ReceptionistAppointments from '../pages/receptionist/ReceptionistAppointments';
+import ReceptionistQueue from '../pages/receptionist/ReceptionistQueue';
+import ReceptionistCheckIn from '../pages/receptionist/ReceptionistCheckIn';
 
 // Admin pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import ManageDoctors from '../pages/admin/ManageDoctors';
 import ManageDepartments from '../pages/admin/ManageDepartments';
 import ManageUsers from '../pages/admin/ManageUsers';
+import AdminAppointments from '../pages/admin/AdminAppointments';
+import AdminReports from '../pages/admin/AdminReports';
+import AdminAuditLogs from '../pages/admin/AdminAuditLogs';
+import AdminSettings from '../pages/admin/AdminSettings';
+import './AppRoutes.css';
 
 // Placeholder pages — will be replaced in later phases
 function ComingSoon({ title }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="coming-soon-wrapper">
       <Navbar />
-      <main className="flex-1 flex flex-col items-center justify-center bg-slate-50 pt-20">
-        <div className="text-center animate-fade-in">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <main className="coming-soon-main">
+        <div className="coming-soon-content">
+          <div className="coming-soon-icon-wrap">
+            <svg className="coming-soon-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
-          <p className="text-gray-500 text-lg mb-8">This page is coming in a future phase.</p>
+          <h1 className="coming-soon-title">{title}</h1>
+          <p className="coming-soon-desc">This page is coming in a future phase.</p>
           <a
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white gradient-primary hover:opacity-90 transition-all btn-press"
+            className="coming-soon-btn"
           >
             ← Back to Home
           </a>
@@ -107,8 +118,9 @@ export default function AppRoutes() {
           <DashboardLayout>
             <Routes>
               <Route path="dashboard" element={<DoctorDashboard />} />
-              <Route path="appointments" element={<DoctorDashboard />} />
-              <Route path="queue" element={<DoctorDashboard />} />
+              <Route path="appointments" element={<DoctorAppointments />} />
+              <Route path="queue" element={<DoctorQueue />} />
+              <Route path="profile" element={<DoctorProfile />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </DashboardLayout>
@@ -122,9 +134,9 @@ export default function AppRoutes() {
             <Routes>
               <Route path="dashboard" element={<ReceptionistDashboard />} />
               <Route path="patients" element={<ReceptionistPatients />} />
-              <Route path="appointments" element={<ReceptionistDashboard />} />
-              <Route path="queue" element={<ReceptionistDashboard />} />
-              <Route path="check-in" element={<ReceptionistDashboard />} />
+              <Route path="appointments" element={<ReceptionistAppointments />} />
+              <Route path="queue" element={<ReceptionistQueue />} />
+              <Route path="check-in" element={<ReceptionistCheckIn />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </DashboardLayout>
@@ -141,8 +153,10 @@ export default function AppRoutes() {
               <Route path="departments" element={<ManageDepartments />} />
               <Route path="patients" element={<ManageUsers />} />
               <Route path="receptionists" element={<ManageUsers />} />
-              <Route path="reports" element={<AdminDashboard />} />
-              <Route path="settings" element={<AdminDashboard />} />
+              <Route path="appointments" element={<AdminAppointments />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="audit-logs" element={<AdminAuditLogs />} />
+              <Route path="settings" element={<AdminSettings />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </DashboardLayout>

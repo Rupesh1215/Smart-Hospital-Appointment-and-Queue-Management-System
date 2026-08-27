@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/doctors/available").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/doctors/{id}").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/doctors/{id}/slots").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/doctors/{id}/availability").permitAll()
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

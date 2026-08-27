@@ -115,6 +115,29 @@ public class AppointmentController {
     }
 
     /**
+     * DELETE /api/appointments/{id} — Cancel an appointment (used by frontend).
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<AppointmentDTO.Response>> deleteCancel(@PathVariable String id) {
+        AppointmentDTO.Response apt = appointmentService.cancel(id, null);
+        return ResponseEntity.ok(
+                ApiResponse.success("Appointment cancelled", apt));
+    }
+
+    /**
+     * PUT /api/appointments/{id} — Update an appointment.
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('PATIENT') or hasRole('RECEPTIONIST') or hasRole('ADMIN') or hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<AppointmentDTO.Response>> update(
+            @PathVariable String id,
+            @Valid @RequestBody AppointmentDTO.StatusUpdateRequest request) {
+        AppointmentDTO.Response apt = appointmentService.updateStatus(id, request);
+        return ResponseEntity.ok(
+                ApiResponse.success("Appointment updated", apt));
+    }
+
+    /**
      * PUT /api/appointments/{id}/status — Update appointment status (doctor/receptionist).
      */
     @PutMapping("/{id}/status")

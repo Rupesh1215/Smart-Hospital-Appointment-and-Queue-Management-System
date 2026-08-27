@@ -1,0 +1,336 @@
+/* ReceptionistPatients.css */
+
+.rec-pat-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fade-in 0.3s ease-in-out;
+}
+
+/* Header */
+.rec-pat-header-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.rec-pat-header-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0.25rem 0 0 0;
+}
+
+/* Filters Bar */
+.rec-pat-filters-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  padding: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.rec-pat-filters-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .rec-pat-filters-row {
+    flex-direction: row;
+  }
+}
+
+.rec-pat-search-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.rec-pat-search-wrap > svg {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  font-size: 1.125rem;
+}
+
+.rec-pat-search-input, .rec-pat-select-input {
+  width: 100%;
+  padding: 0.625rem 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.rec-pat-search-input:focus, .rec-pat-select-input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+}
+
+.rec-pat-search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rec-pat-search-clear:hover {
+  color: #475569;
+}
+
+.rec-pat-filter-wrap {
+  position: relative;
+}
+
+.rec-pat-filter-wrap > svg {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.rec-pat-select-input {
+  appearance: none;
+  background-color: #ffffff;
+  padding-left: 2.5rem;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+.rec-pat-toggle-btn {
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.rec-pat-toggle-btn.active {
+  background-color: #f0fdfa;
+  color: #0f766e;
+  border-color: #99f6e4;
+}
+
+.rec-pat-toggle-btn.inactive {
+  background-color: #f8fafc;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+
+.rec-pat-toggle-btn.inactive:hover {
+  background-color: #f1f5f9;
+}
+
+/* Results Count */
+.rec-pat-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rec-pat-results-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.rec-pat-results-text span {
+  font-weight: 600;
+  color: #334155;
+}
+
+.rec-pat-unique-patients {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rec-pat-unique-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #14b8a6;
+}
+
+.rec-pat-unique-text {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Table Card */
+.rec-pat-table-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.rec-pat-empty-state {
+  padding: 3rem;
+  text-align: center;
+}
+
+.rec-pat-empty-icon {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1rem auto;
+  border-radius: 1rem;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rec-pat-empty-icon svg {
+  font-size: 1.875rem;
+  color: #cbd5e1;
+}
+
+.rec-pat-empty-title {
+  color: #64748b;
+  margin: 0 0 0.25rem 0;
+}
+
+.rec-pat-empty-desc {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.rec-pat-table-wrap {
+  overflow-x: auto;
+}
+
+.rec-pat-table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+
+.rec-pat-table th {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.rec-pat-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.rec-pat-table tr:hover td {
+  background-color: rgba(248, 250, 252, 0.5);
+}
+
+.rec-pat-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rec-pat-cell-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rec-pat-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: linear-gradient(to bottom right, #cbd5e1, #94a3b8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.rec-pat-cell-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  margin: 0;
+}
+
+.rec-pat-cell-mono {
+  font-size: 0.875rem;
+  color: #475569;
+  font-family: monospace;
+  margin: 0;
+}
+
+.rec-pat-cell-doc {
+  font-size: 0.875rem;
+  color: #334155;
+  margin: 0;
+}
+
+.rec-pat-cell-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.rec-pat-cell-truncate {
+  font-size: 0.875rem;
+  color: #475569;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.rec-pat-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Loader */
+.rec-pat-loader-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16rem;
+}
+
+.rec-pat-loader {
+  width: 2rem;
+  height: 2rem;
+  border: 4px solid #14b8a6;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

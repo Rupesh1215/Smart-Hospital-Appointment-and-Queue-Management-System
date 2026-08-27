@@ -19,6 +19,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   # Spring Boot Backend
   backend:
@@ -32,17 +38,24 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+    env_file:
+      - .env.docker
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/smart_hospital
       SPRING_DATA_MONGODB_DATABASE: smart_hospital
-      JWT_SECRET: ${JWT_SECRET:-SmartHospitalSecretKeyForJWTAuth2026SuperSecureKey}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      SPRING_PROFILES_ACTIVE: prod
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       start_period: 60s
       retries: 3
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 768M
 
   # Vite React Frontend (served by Nginx)
   frontend:
@@ -58,7 +71,17 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
 volumes:
   mongo_data:
     driver: local
+
+networks:
+  hospital-network:
+    driver: bridge

@@ -18,6 +18,7 @@ import {
   MdWork,
   MdCurrencyRupee,
 } from 'react-icons/md';
+import './BookAppointment.css';
 
 export default function BookAppointment() {
   // Step state: 1=select doctor, 2=select slot, 3=confirm
@@ -143,41 +144,31 @@ export default function BookAppointment() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      <div className="book-loader-wrap">
+        <div className="book-loader" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="book-apt-page">
       {/* Progress Steps */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-        <div className="flex items-center justify-center gap-2">
+      <div className="book-steps-card">
+        <div className="book-steps-container">
           {[
             { num: 1, label: 'Select Doctor' },
             { num: 2, label: 'Choose Slot' },
             { num: 3, label: 'Confirm' },
           ].map((s, i) => (
-            <div key={s.num} className="flex items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                  step >= s.num
-                    ? 'bg-teal-600 text-white'
-                    : 'bg-slate-100 text-slate-400'
-                }`}
-              >
-                {step > s.num ? <MdCheckCircle className="text-lg" /> : s.num}
+            <div key={s.num} className="book-step-wrapper">
+              <div className={`book-step-circle ${step >= s.num ? 'active' : 'inactive'}`}>
+                {step > s.num ? <MdCheckCircle /> : s.num}
               </div>
-              <span
-                className={`text-sm font-medium hidden sm:inline ${
-                  step >= s.num ? 'text-teal-700' : 'text-slate-400'
-                }`}
-              >
+              <span className={`book-step-label ${step >= s.num ? 'active' : 'inactive'}`}>
                 {s.label}
               </span>
               {i < 2 && (
-                <div className={`w-12 h-0.5 mx-1 ${step > s.num ? 'bg-teal-500' : 'bg-slate-200'}`} />
+                <div className={`book-step-line ${step > s.num ? 'active' : 'inactive'}`} />
               )}
             </div>
           ))}
@@ -186,28 +177,27 @@ export default function BookAppointment() {
 
       {/* Step 1: Select Doctor */}
       {step === 1 && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <h2 className="text-xl font-bold text-slate-900">Find a Doctor</h2>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h2 className="book-section-title">Find a Doctor</h2>
 
           {/* Search & Filter */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <MdSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+          <div className="book-panel">
+            <div className="book-filters-row">
+              <div className="book-search-wrap">
+                <MdSearch />
                 <input
                   type="text"
                   placeholder="Search by name or specialization..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                  className="book-search-input"
                 />
               </div>
               <select
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                className="book-select-input"
+                style={{ width: 'auto', flexShrink: 0 }}
               >
                 <option value="">All Departments</option>
                 {departments.map((dept) => (
@@ -221,55 +211,53 @@ export default function BookAppointment() {
 
           {/* Doctor Cards */}
           {filteredDoctors.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center shadow-sm">
-              <MdLocalHospital className="text-5xl text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">No doctors found matching your criteria.</p>
+            <div className="book-empty-state">
+              <MdLocalHospital />
+              <p>No doctors found matching your criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="book-doc-grid">
               {filteredDoctors.map((doc) => (
                 <div
                   key={doc.id}
-                  className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm hover:shadow-md hover:border-teal-200 transition-all duration-200 cursor-pointer card-hover"
+                  className="book-doc-card"
                   onClick={() => handleSelectDoctor(doc)}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                      {doc.doctorName?.charAt(0) || 'D'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-slate-900">
-                        Dr. {doc.doctorName}
-                      </h3>
-                      <p className="text-sm text-teal-600 font-medium mt-0.5">
-                        {doc.specialization}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {doc.departmentName || 'General'}
-                      </p>
-
-                      <div className="flex items-center gap-4 mt-3 flex-wrap">
-                        {doc.experience > 0 && (
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <MdWork className="text-sm text-slate-400" />
-                            {doc.experience} yrs
-                          </div>
-                        )}
-                        {doc.consultationFee > 0 && (
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
-                            <MdCurrencyRupee className="text-sm text-slate-400" />
-                            ₹{doc.consultationFee}
-                          </div>
-                        )}
-                        {doc.qualification && (
-                          <div className="text-xs text-slate-400">
-                            {doc.qualification}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <MdArrowForward className="text-xl text-slate-300 flex-shrink-0 mt-2" />
+                  <div className="book-doc-avatar">
+                    {doc.doctorName?.charAt(0) || 'D'}
                   </div>
+                  <div className="book-doc-info">
+                    <h3 className="book-doc-name">
+                      Dr. {doc.doctorName}
+                    </h3>
+                    <p className="book-doc-spec">
+                      {doc.specialization}
+                    </p>
+                    <p className="book-doc-dept">
+                      {doc.departmentName || 'General'}
+                    </p>
+
+                    <div className="book-doc-meta">
+                      {doc.experience > 0 && (
+                        <div className="book-doc-meta-item">
+                          <MdWork />
+                          {doc.experience} yrs
+                        </div>
+                      )}
+                      {doc.consultationFee > 0 && (
+                        <div className="book-doc-meta-item">
+                          <MdCurrencyRupee />
+                          ₹{doc.consultationFee}
+                        </div>
+                      )}
+                      {doc.qualification && (
+                        <div className="book-doc-meta-item">
+                          {doc.qualification}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <MdArrowForward className="book-doc-arrow" />
                 </div>
               ))}
             </div>
@@ -279,86 +267,80 @@ export default function BookAppointment() {
 
       {/* Step 2: Select Slot */}
       {step === 2 && selectedDoctor && (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
             onClick={() => { setStep(1); setSelectedSlot(null); }}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            className="book-back-btn"
           >
             <MdArrowBack />
             Back to Doctors
           </button>
 
           {/* Selected Doctor Card */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                {selectedDoctor.doctorName?.charAt(0)}
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">
-                  Dr. {selectedDoctor.doctorName}
-                </h3>
-                <p className="text-sm text-teal-600">{selectedDoctor.specialization}</p>
-                <p className="text-xs text-slate-500">{selectedDoctor.departmentName}</p>
-              </div>
+          <div className="book-panel" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="book-doc-avatar" style={{ width: '3.5rem', height: '3.5rem' }}>
+              {selectedDoctor.doctorName?.charAt(0)}
+            </div>
+            <div>
+              <h3 className="book-doc-name">
+                Dr. {selectedDoctor.doctorName}
+              </h3>
+              <p className="book-doc-spec">{selectedDoctor.specialization}</p>
+              <p className="book-doc-dept">{selectedDoctor.departmentName}</p>
             </div>
           </div>
 
           {/* Date Selection */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">Select Date</h3>
-            <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="book-panel">
+            <h3 className="book-panel-title">Select Date</h3>
+            <div className="book-date-row">
               {dateOptions.map((d) => (
                 <button
                   key={d.value}
                   onClick={() => handleDateChange(d.value)}
-                  className={`flex flex-col items-center px-4 py-3 rounded-xl min-w-[70px] text-sm transition-all cursor-pointer flex-shrink-0 ${
-                    selectedDate === d.value
-                      ? 'bg-teal-600 text-white shadow-sm'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`book-date-btn ${selectedDate === d.value ? 'active' : 'inactive'}`}
                 >
-                  <span className="text-xs font-medium opacity-75">{d.day}</span>
-                  <span className="text-lg font-bold">{d.dateNum}</span>
+                  <span className="book-date-day">{d.day}</span>
+                  <span className="book-date-num">{d.dateNum}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Time Slots */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">
+          <div className="book-panel">
+            <h3 className="book-panel-title">
               Available Slots
               {selectedDate && (
-                <span className="font-normal text-slate-500 ml-2">
+                <span>
                   for {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </span>
               )}
             </h3>
 
             {slotsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <div className="book-loader-wrap book-loader-py">
+                <div className="book-loader small" />
               </div>
             ) : slots.length === 0 ? (
-              <div className="text-center py-12">
-                <MdAccessTime className="text-4xl text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-500 text-sm">No slots available for this date.</p>
-                <p className="text-slate-400 text-xs mt-1">Try selecting a different date.</p>
+              <div className="book-empty-state" style={{ padding: '3rem 1rem' }}>
+                <MdAccessTime />
+                <p>No slots available for this date.</p>
+                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Try selecting a different date.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+              <div className="book-slot-grid">
                 {slots.map((slot, i) => (
                   <button
                     key={i}
                     onClick={() => slot.available && handleSelectSlot(slot)}
                     disabled={!slot.available}
-                    className={`py-2.5 px-3 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                    className={`book-slot-btn ${
                       !slot.available
-                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed line-through'
+                        ? 'unavailable'
                         : selectedSlot?.startTime === slot.startTime
-                        ? 'bg-teal-600 text-white shadow-sm'
-                        : 'bg-teal-50 text-teal-700 hover:bg-teal-100'
+                        ? 'active'
+                        : 'available'
                     }`}
                   >
                     {formatTime(slot.startTime)}
@@ -372,55 +354,55 @@ export default function BookAppointment() {
 
       {/* Step 3: Confirm */}
       {step === 3 && selectedDoctor && selectedSlot && (
-        <div className="space-y-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
             onClick={() => setStep(2)}
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+            className="book-back-btn"
           >
             <MdArrowBack />
             Back to Slots
           </button>
 
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm max-w-lg mx-auto">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-50 flex items-center justify-center mb-4">
-                <MdCheckCircle className="text-3xl text-teal-600" />
+          <div className="book-confirm-card">
+            <div className="book-confirm-header">
+              <div className="book-confirm-icon-wrap">
+                <MdCheckCircle />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Confirm Appointment</h2>
-              <p className="text-sm text-slate-500 mt-1">Review the details below</p>
+              <h2 className="book-confirm-title">Confirm Appointment</h2>
+              <p className="book-confirm-subtitle">Review the details below</p>
             </div>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Doctor</span>
-                <span className="text-sm font-medium text-slate-900">
+            <div className="book-confirm-details">
+              <div className="book-confirm-row">
+                <span className="book-confirm-label">Doctor</span>
+                <span className="book-confirm-val">
                   Dr. {selectedDoctor.doctorName}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Department</span>
-                <span className="text-sm font-medium text-slate-900">
+              <div className="book-confirm-row">
+                <span className="book-confirm-label">Department</span>
+                <span className="book-confirm-val">
                   {selectedDoctor.departmentName || 'General'}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Date</span>
-                <span className="text-sm font-medium text-slate-900">
+              <div className="book-confirm-row">
+                <span className="book-confirm-label">Date</span>
+                <span className="book-confirm-val">
                   {new Date(selectedDate).toLocaleDateString('en-IN', {
                     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                   })}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                <span className="text-sm text-slate-500">Time</span>
-                <span className="text-sm font-medium text-slate-900">
+              <div className="book-confirm-row">
+                <span className="book-confirm-label">Time</span>
+                <span className="book-confirm-val">
                   {formatTime(selectedSlot.startTime)} — {formatTime(selectedSlot.endTime)}
                 </span>
               </div>
               {selectedDoctor.consultationFee > 0 && (
-                <div className="flex justify-between items-center py-3 border-b border-slate-100">
-                  <span className="text-sm text-slate-500">Fee</span>
-                  <span className="text-sm font-semibold text-teal-600">
+                <div className="book-confirm-row">
+                  <span className="book-confirm-label">Fee</span>
+                  <span className="book-confirm-val fee">
                     ₹{selectedDoctor.consultationFee}
                   </span>
                 </div>
@@ -428,8 +410,8 @@ export default function BookAppointment() {
             </div>
 
             {/* Reason */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+            <div className="book-reason-group">
+              <label className="book-reason-label">
                 Reason for visit (optional)
               </label>
               <textarea
@@ -437,14 +419,14 @@ export default function BookAppointment() {
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Brief description of your symptoms or reason..."
                 rows={3}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                className="book-reason-input"
               />
             </div>
 
             <button
               onClick={handleBook}
               disabled={booking}
-              className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 shadow-sm btn-press"
+              className="book-submit-btn"
             >
               {booking ? 'Booking...' : 'Confirm Booking'}
             </button>

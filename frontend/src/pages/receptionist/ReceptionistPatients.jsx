@@ -13,6 +13,7 @@ import {
   MdPhone,
   MdLocalHospital,
 } from 'react-icons/md';
+import './ReceptionistPatients.css';
 
 const STATUS_FILTERS = ['ALL', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
 
@@ -77,39 +78,39 @@ export default function ReceptionistPatients() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+      <div className="rec-pat-loader-wrap">
+        <div className="rec-pat-loader" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="rec-pat-page">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Patients</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="rec-pat-header-title">Patients</h1>
+        <p className="rec-pat-header-subtitle">
           Search and manage patient appointments
         </p>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row gap-3">
+      <div className="rec-pat-filters-card">
+        <div className="rec-pat-filters-row">
           {/* Search */}
-          <div className="relative flex-1">
-            <MdSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+          <div className="rec-pat-search-wrap">
+            <MdSearch />
             <input
               type="text"
               placeholder="Search by patient name, appointment #, or doctor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+              className="rec-pat-search-input"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="rec-pat-search-clear"
               >
                 <MdClose />
               </button>
@@ -117,12 +118,12 @@ export default function ReceptionistPatients() {
           </div>
 
           {/* Status Filter */}
-          <div className="relative">
-            <MdFilterList className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <div className="rec-pat-filter-wrap">
+            <MdFilterList />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="pl-10 pr-8 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 appearance-none bg-white cursor-pointer"
+              className="rec-pat-select-input"
             >
               {STATUS_FILTERS.map((s) => (
                 <option key={s} value={s}>
@@ -135,11 +136,7 @@ export default function ReceptionistPatients() {
           {/* Today Toggle */}
           <button
             onClick={() => setShowTodayOnly(!showTodayOnly)}
-            className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
-              showTodayOnly
-                ? 'bg-teal-50 text-teal-700 border border-teal-200'
-                : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
-            }`}
+            className={`rec-pat-toggle-btn ${showTodayOnly ? 'active' : 'inactive'}`}
           >
             {showTodayOnly ? "Today's Only" : 'All Dates'}
           </button>
@@ -147,79 +144,79 @@ export default function ReceptionistPatients() {
       </div>
 
       {/* Results Count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          Showing <span className="font-semibold text-slate-700">{filteredAppointments.length}</span> appointment{filteredAppointments.length !== 1 ? 's' : ''}
+      <div className="rec-pat-results-bar">
+        <p className="rec-pat-results-text">
+          Showing <span>{filteredAppointments.length}</span> appointment{filteredAppointments.length !== 1 ? 's' : ''}
           {showTodayOnly && ' for today'}
         </p>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-teal-500" />
-          <span className="text-xs text-slate-500">
+        <div className="rec-pat-unique-patients">
+          <div className="rec-pat-unique-dot" />
+          <span className="rec-pat-unique-text">
             {patientsMap.size} unique patient{patientsMap.size !== 1 ? 's' : ''}
           </span>
         </div>
       </div>
 
       {/* Patient Appointments List */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
+      <div className="rec-pat-table-card">
         {filteredAppointments.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-50 flex items-center justify-center">
-              <MdPeople className="text-3xl text-slate-300" />
+          <div className="rec-pat-empty-state">
+            <div className="rec-pat-empty-icon">
+              <MdPeople />
             </div>
-            <p className="text-slate-500 mb-1">No patients found</p>
-            <p className="text-sm text-slate-400">Try adjusting your search or filters</p>
+            <p className="rec-pat-empty-title">No patients found</p>
+            <p className="rec-pat-empty-desc">Try adjusting your search or filters</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="rec-pat-table-wrap">
+            <table className="rec-pat-table">
               <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Patient</th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Appt #</th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Doctor</th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Date & Time</th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Reason</th>
-                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-6 py-3">Status</th>
+                <tr>
+                  <th>Patient</th>
+                  <th>Appt #</th>
+                  <th>Doctor</th>
+                  <th>Date & Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody>
                 {filteredAppointments.map((apt) => {
                   const statusColor = STATUS_COLORS[apt.status] || STATUS_COLORS.PENDING;
                   return (
-                    <tr key={apt.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                    <tr key={apt.id}>
+                      <td>
+                        <div className="rec-pat-cell-user">
+                          <div className="rec-pat-avatar">
                             {apt.patientName?.charAt(0)?.toUpperCase() || 'P'}
                           </div>
-                          <p className="text-sm font-medium text-slate-900">{apt.patientName || 'Unknown'}</p>
+                          <p className="rec-pat-cell-name">{apt.patientName || 'Unknown'}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-slate-600 font-mono">{apt.appointmentNumber || '—'}</p>
+                      <td>
+                        <p className="rec-pat-cell-mono">{apt.appointmentNumber || '—'}</p>
                       </td>
-                      <td className="px-6 py-4">
+                      <td>
                         <div>
-                          <p className="text-sm text-slate-700">Dr. {apt.doctorName || 'Unknown'}</p>
-                          <p className="text-xs text-slate-500">{apt.departmentName || '—'}</p>
+                          <p className="rec-pat-cell-doc">Dr. {apt.doctorName || 'Unknown'}</p>
+                          <p className="rec-pat-cell-sub">{apt.departmentName || '—'}</p>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-slate-700">
+                      <td>
+                        <p className="rec-pat-cell-doc">
                           {apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="rec-pat-cell-sub">
                           {apt.startTime ? formatTime(apt.startTime) : '—'}
                         </p>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="text-sm text-slate-600 max-w-[200px] truncate">
+                      <td>
+                        <p className="rec-pat-cell-truncate">
                           {apt.reason || '—'}
                         </p>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-medium ${statusColor.bg} ${statusColor.text}`}>
+                      <td>
+                        <span className={`rec-pat-badge ${statusColor.bg} ${statusColor.text}`}>
                           {apt.status?.replace(/_/g, ' ')}
                         </span>
                       </td>

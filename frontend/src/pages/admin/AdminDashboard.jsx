@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import analyticsService from '../../services/analyticsService';
-import adminService from '../../services/adminService';
 import {
   MdPeople,
   MdLocalHospital,
@@ -14,6 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts';
+import './AdminDashboard.css';
 
 export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
@@ -37,12 +37,12 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="skeleton h-24 rounded-xl" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
+      <div className="admin-skeleton-container">
+        <div className="skeleton-box h-24" />
+        <div className="admin-stats-grid">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton-box h-24" />)}
         </div>
-        <div className="skeleton h-72 rounded-xl" />
+        <div className="skeleton-box h-72" />
       </div>
     );
   }
@@ -55,50 +55,48 @@ export default function AdminDashboard() {
   ];
 
   const stats = [
-    { label: 'Total Users', value: analytics?.totalUsers || 0, icon: MdPeople, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Doctors', value: analytics?.totalDoctors || 0, icon: MdLocalHospital, color: 'text-teal-600', bg: 'bg-teal-50' },
-    { label: 'Appointments', value: analytics?.totalAppointments || 0, icon: MdCalendarMonth, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Revenue', value: `$${analytics?.estimatedRevenue || 0}`, icon: MdAttachMoney, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Total Users', value: analytics?.totalUsers || 0, icon: MdPeople, color: '#2563eb', bg: '#eff6ff' },
+    { label: 'Active Doctors', value: analytics?.totalDoctors || 0, icon: MdLocalHospital, color: '#0d9488', bg: '#f0fdfa' },
+    { label: 'Appointments', value: analytics?.totalAppointments || 0, icon: MdCalendarMonth, color: '#d97706', bg: '#fffbeb' },
+    { label: 'Revenue', value: `$${analytics?.estimatedRevenue || 0}`, icon: MdAttachMoney, color: '#16a34a', bg: '#f0fdf4' },
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="admin-dashboard">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="admin-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Hospital Overview</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Real-time statistics and analytics</p>
+          <h1 className="admin-header-title">Hospital Overview</h1>
+          <p className="admin-header-subtitle">Real-time statistics and analytics</p>
         </div>
-        <button onClick={fetchData} className="btn btn-secondary btn-sm cursor-pointer">
-          <MdRefresh className="text-lg" /> Refresh
+        <button onClick={fetchData} className="admin-refresh-btn">
+          <MdRefresh /> Refresh
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="admin-stats-grid">
         {stats.map((stat, i) => (
-          <div key={i} className="stat-card">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                <stat.icon className={`text-xl ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                <p className="text-xs text-slate-500">{stat.label}</p>
-              </div>
+          <div key={i} className="admin-stat-card">
+            <div className="admin-stat-icon-wrap" style={{ backgroundColor: stat.bg }}>
+              <stat.icon style={{ color: stat.color }} />
+            </div>
+            <div>
+              <p className="admin-stat-val">{stat.value}</p>
+              <p className="admin-stat-label">{stat.label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="card p-5">
-          <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <MdBusiness className="text-blue-600" />
+      <div className="admin-charts-grid">
+        <div className="admin-chart-card">
+          <h3 className="admin-chart-header">
+            <MdBusiness />
             Appointments by Department
           </h3>
-          <div className="h-64">
+          <div className="admin-chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deptData.length > 0 ? deptData : [{ name: 'General', count: 1 }]}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -111,12 +109,12 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="card p-5">
-          <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-            <MdCheckCircle className="text-blue-600" />
+        <div className="admin-chart-card">
+          <h3 className="admin-chart-header">
+            <MdCheckCircle />
             Appointment Status
           </h3>
-          <div className="h-64 flex items-center justify-center">
+          <div className="admin-chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
@@ -128,10 +126,10 @@ export default function AdminDashboard() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center gap-4 mt-2">
+          <div className="admin-chart-legend">
             {statusData.map((item, i) => (
-              <div key={i} className="flex items-center gap-1.5 text-xs text-slate-600">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+              <div key={i} className="admin-legend-item">
+                <div className="admin-legend-dot" style={{ backgroundColor: COLORS[i] }} />
                 {item.name}: {item.value}
               </div>
             ))}

@@ -36,4 +36,6 @@ public class RegisterRequest {
     private LocalDate dateOfBirth;
 
     private String address;
+
+    private com.hospital.smart.model.enums.Role role;
 }

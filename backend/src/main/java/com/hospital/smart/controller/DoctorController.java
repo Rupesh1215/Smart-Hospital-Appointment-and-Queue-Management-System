@@ -115,4 +115,27 @@ public class DoctorController {
         return ResponseEntity.ok(
                 ApiResponse.success("Availability toggled", doctor));
     }
+
+    /**
+     * DELETE /api/doctors/{id} — Delete a doctor (admin only).
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
+        doctorService.delete(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Doctor deleted successfully", null));
+    }
+
+    /**
+     * GET /api/doctors/{id}/availability — Get doctor availability for a date.
+     */
+    @GetMapping("/{id}/availability")
+    public ResponseEntity<ApiResponse<DoctorDTO.Response>> getAvailability(
+            @PathVariable String id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        DoctorDTO.Response doctor = doctorService.getAvailability(id, date);
+        return ResponseEntity.ok(
+                ApiResponse.success("Availability retrieved", doctor));
+    }
 }

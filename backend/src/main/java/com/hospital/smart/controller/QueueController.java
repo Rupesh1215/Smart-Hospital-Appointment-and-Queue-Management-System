@@ -32,7 +32,7 @@ public class QueueController {
      * POST /api/queues/check-in — Check in a patient for their appointment.
      */
     @PostMapping("/check-in")
-    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('PATIENT') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('PATIENT') or hasRole('ADMIN') or hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> checkIn(
             @Valid @RequestBody QueueDTO.CheckInRequest request) {
         QueueDTO.Response queue = queueService.checkIn(request.getAppointmentId());
@@ -89,18 +89,22 @@ public class QueueController {
     }
 
     /**
-     * GET /api/queues/{doctorId} — Get queue for a doctor (today by default).
+     * GET /api/queues/patient/{patientId} — Get queue entries for a specific patient.
      */
-    @GetMapping("/{doctorId}")
-    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByDoctor(
-            @PathVariable String doctorId,
+    @GetMapping("/patient/{patientId}")
+    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByPatient(
+            @PathVariable String patientId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate date) {
-        List<QueueDTO.Response> queue = (date != null)
-                ? queueService.getByDoctor(doctorId, date)
-                : queueService.getByDoctorToday(doctorId);
-        return ResponseEntity.ok(
-                ApiResponse.success("Queue retrieved", queue));
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        try {
+            QueueDTO.Response queue = queueService.getByPatient(patientId, targetDate);
+            return ResponseEntity.ok(
+                    ApiResponse.success("Queue retrieved", List.of(queue)));
+        } catch (com.hospital.smart.exception.ResourceNotFoundException e) {
+            return ResponseEntity.ok(
+                    ApiResponse.success("No queue entry found", List.of()));
+        }
     }
 
     /**
@@ -117,5 +121,20 @@ public class QueueController {
                 patient.getId(), LocalDate.now());
         return ResponseEntity.ok(
                 ApiResponse.success("Queue status retrieved", queue));
+    }
+
+    /**
+     * GET /api/queues/{doctorId} — Get queue for a doctor (today by default).
+     */
+    @GetMapping("/{doctorId}")
+    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByDoctor(
+            @PathVariable String doctorId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date) {
+        List<QueueDTO.Response> queue = (date != null)
+                ? queueService.getByDoctor(doctorId, date)
+                : queueService.getByDoctorToday(doctorId);
+        return ResponseEntity.ok(
+                ApiResponse.success("Queue retrieved", queue));
     }
 }

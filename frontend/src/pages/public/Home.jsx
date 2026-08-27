@@ -22,55 +22,44 @@ import {
 } from 'react-icons/md';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import './Home.css';
 
 const features = [
   {
     icon: MdCalendarMonth,
     title: 'Smart Scheduling',
     description: 'AI-powered appointment booking that finds the perfect slot based on doctor availability and your preferences.',
-    gradient: 'from-primary-500 to-emerald-500',
-    iconBg: 'bg-primary-500/10',
-    size: 'large',
+    iconClass: 'icon-primary-emerald',
   },
   {
     icon: MdPeople,
     title: 'Live Queue Tracking',
     description: 'Real-time queue position updates with accurate waiting time estimates. No more guessing.',
-    gradient: 'from-blue-500 to-indigo-500',
-    iconBg: 'bg-blue-500/10',
-    size: 'small',
+    iconClass: 'icon-blue-indigo',
   },
   {
     icon: MdSmartToy,
     title: 'AI Assistant',
     description: 'Chat with our intelligent assistant to find doctors, book appointments, and get instant answers.',
-    gradient: 'from-violet-500 to-purple-500',
-    iconBg: 'bg-violet-500/10',
-    size: 'small',
+    iconClass: 'icon-violet-purple',
   },
   {
     icon: MdSpeed,
     title: 'Zero Wait Time',
     description: 'Dynamic queue management minimizes patient waiting through intelligent scheduling algorithms.',
-    gradient: 'from-orange-500 to-red-500',
-    iconBg: 'bg-orange-500/10',
-    size: 'small',
+    iconClass: 'icon-orange-red',
   },
   {
     icon: MdSecurity,
     title: 'Secure & Private',
     description: 'Enterprise-grade security with encrypted data, role-based access, and complete audit trails.',
-    gradient: 'from-cyan-500 to-blue-500',
-    iconBg: 'bg-cyan-500/10',
-    size: 'small',
+    iconClass: 'icon-cyan-blue',
   },
   {
     icon: MdNotifications,
     title: 'Smart Reminders',
     description: 'Automated appointment reminders and queue notifications keep you informed at every step.',
-    gradient: 'from-amber-500 to-orange-500',
-    iconBg: 'bg-amber-500/10',
-    size: 'large',
+    iconClass: 'icon-amber-orange',
   },
 ];
 
@@ -83,14 +72,14 @@ const steps = [
 ];
 
 const departments = [
-  { name: 'Cardiology', icon: MdFavorite, color: 'text-rose-500', bg: 'bg-rose-50', doctors: 3 },
-  { name: 'Neurology', icon: MdPsychology, color: 'text-violet-500', bg: 'bg-violet-50', doctors: 2 },
-  { name: 'Orthopedics', icon: MdHealthAndSafety, color: 'text-blue-500', bg: 'bg-blue-50', doctors: 2 },
-  { name: 'Dermatology', icon: MdScience, color: 'text-emerald-500', bg: 'bg-emerald-50', doctors: 1 },
-  { name: 'General Medicine', icon: MdMedicalServices, color: 'text-primary-500', bg: 'bg-primary-50', doctors: 4 },
-  { name: 'Pediatrics', icon: MdChildCare, color: 'text-amber-500', bg: 'bg-amber-50', doctors: 2 },
-  { name: 'ENT', icon: MdHearing, color: 'text-indigo-500', bg: 'bg-indigo-50', doctors: 1 },
-  { name: 'Ophthalmology', icon: MdVisibility, color: 'text-cyan-500', bg: 'bg-cyan-50', doctors: 1 },
+  { name: 'Cardiology', icon: MdFavorite, colorClass: 'dept-rose', doctors: 3 },
+  { name: 'Neurology', icon: MdPsychology, colorClass: 'dept-violet', doctors: 2 },
+  { name: 'Orthopedics', icon: MdHealthAndSafety, colorClass: 'dept-blue', doctors: 2 },
+  { name: 'Dermatology', icon: MdScience, colorClass: 'dept-emerald', doctors: 1 },
+  { name: 'General Medicine', icon: MdMedicalServices, colorClass: 'dept-primary', doctors: 4 },
+  { name: 'Pediatrics', icon: MdChildCare, colorClass: 'dept-amber', doctors: 2 },
+  { name: 'ENT', icon: MdHearing, colorClass: 'dept-indigo', doctors: 1 },
+  { name: 'Ophthalmology', icon: MdVisibility, colorClass: 'dept-cyan', doctors: 1 },
 ];
 
 const stats = [
@@ -125,355 +114,275 @@ const faqs = [
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="home-container">
       <Navbar />
 
       {/* ==================== HERO ==================== */}
-      <section className="relative min-h-screen flex items-center overflow-hidden gradient-hero-premium pt-20">
-        {/* Aurora background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="aurora-blob aurora-blob-1 absolute top-10 left-[5%]" />
-          <div className="aurora-blob aurora-blob-2 absolute bottom-10 right-[10%]" />
-
-          {/* Dot grid pattern */}
-          <div className="absolute inset-0 bg-dot-grid-dark opacity-30" />
+      <section className="home-hero">
+        <div className="home-hero-bg">
+          <div className="home-aurora blob-1" />
+          <div className="home-aurora blob-2" />
+          <div className="home-dot-grid" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left — Copy */}
-            <div className="animate-fade-in">
-              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] backdrop-blur-md mb-8">
-                <div className="relative">
-                  <div className="w-2 h-2 rounded-full bg-primary-400" />
-                  <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary-400 animate-ripple" />
+        <div className="home-hero-content">
+          <div className="home-hero-grid">
+            <div className="home-hero-left">
+              <div className="home-hero-badge">
+                <div className="home-hero-badge-dot-container">
+                  <div className="home-hero-badge-dot" />
+                  <div className="home-hero-badge-dot-pulse" />
                 </div>
-                <span className="text-primary-300 text-sm font-medium">AI-Powered Healthcare Platform</span>
+                <span>AI-Powered Healthcare Platform</span>
               </div>
 
-              <h1 className="heading-xl text-4xl sm:text-5xl lg:text-6xl xl:text-[4.25rem] text-white mb-6">
-                Smart Healthcare.{' '}
-                <span className="gradient-text-vivid">Smarter Appointments.</span>
+              <h1 className="home-hero-title">
+                Smart Healthcare. <span className="home-hero-title-highlight">Smarter Appointments.</span>
               </h1>
 
-              <p className="text-lg lg:text-xl text-slate-400 leading-relaxed mb-10 max-w-xl">
+              <p className="home-hero-desc">
                 Book appointments, track queues in real time, and connect with doctors through
                 an intelligent hospital management platform powered by AI.
               </p>
 
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  to="/register"
-                  className="group inline-flex items-center gap-2 px-7 py-4 rounded-2xl text-base font-semibold text-white gradient-primary hover:shadow-xl hover:shadow-primary-500/25 transition-all duration-300 btn-press"
-                >
+              <div className="home-hero-actions">
+                <Link to="/register" className="home-btn-primary">
                   Book Appointment
-                  <MdArrowForward className="text-lg group-hover:translate-x-1 transition-transform" />
+                  <MdArrowForward className="icon-arrow" />
                 </Link>
-                <Link
-                  to="/doctors"
-                  className="inline-flex items-center gap-2 px-7 py-4 rounded-2xl text-base font-semibold text-white border border-white/15 hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300 backdrop-blur-sm btn-press"
-                >
-                  <MdSearch className="text-lg" />
+                <Link to="/doctors" className="home-btn-secondary">
+                  <MdSearch className="icon-search" />
                   Find a Doctor
                 </Link>
               </div>
 
-              {/* Trust indicators */}
-              <div className="flex items-center gap-6 mt-14 pt-8 border-t border-white/[0.06]">
-                <div className="flex -space-x-3">
-                  {['from-primary-400 to-primary-600', 'from-accent-400 to-accent-600', 'from-violet-400 to-violet-600', 'from-amber-400 to-amber-600'].map((color, i) => (
-                    <div
-                      key={i}
-                      className={`w-10 h-10 rounded-xl bg-gradient-to-br ${color} border-2 border-slate-900 flex items-center justify-center text-white text-[0.6rem] font-bold shadow-lg`}
-                    >
-                      {['Dr', 'Pt', 'Rx', 'AI'][i]}
-                    </div>
-                  ))}
+              <div className="home-trust-indicators">
+                <div className="home-trust-avatars">
+                  <div className="home-avatar avatar-1">Dr</div>
+                  <div className="home-avatar avatar-2">Pt</div>
+                  <div className="home-avatar avatar-3">Rx</div>
+                  <div className="home-avatar avatar-4">AI</div>
                 </div>
-                <div>
-                  <div className="flex items-center gap-0.5 mb-1">
+                <div className="home-trust-rating">
+                  <div className="home-stars">
                     {[...Array(5)].map((_, i) => (
-                      <MdStar key={i} className="text-yellow-400 text-sm" />
+                      <MdStar key={i} className="icon-star" />
                     ))}
-                    <span className="text-white/50 text-xs ml-1.5 font-medium">4.9/5</span>
+                    <span className="home-rating-score">4.9/5</span>
                   </div>
-                  <p className="text-slate-500 text-sm">Trusted by 10,000+ patients</p>
+                  <p className="home-rating-desc">Trusted by 10,000+ patients</p>
                 </div>
               </div>
             </div>
 
-            {/* Right — Dashboard Preview Card */}
-            <div className="hidden lg:block animate-slide-right">
-              <div className="relative">
-                {/* Floating elements */}
-                <div className="absolute -top-6 -left-6 glass-dark rounded-2xl px-4 py-3 shadow-xl animate-float z-10 border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                      <MdCheckCircle className="text-emerald-400 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-[0.65rem] text-slate-500 font-medium">Appointment</p>
-                      <p className="text-sm font-semibold text-white">Confirmed ✓</p>
-                    </div>
+            <div className="home-hero-right">
+              <div className="home-dashboard-preview">
+                <div className="home-floating-card top-card">
+                  <div className="home-floating-icon emerald">
+                    <MdCheckCircle />
+                  </div>
+                  <div>
+                    <p className="home-floating-label">Appointment</p>
+                    <p className="home-floating-value">Confirmed ✓</p>
                   </div>
                 </div>
 
-                <div className="absolute -bottom-4 -right-4 glass-dark rounded-2xl px-4 py-3 shadow-xl animate-float delay-500 z-10 border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
-                      <MdPeople className="text-blue-400 text-xl" />
-                    </div>
-                    <div>
-                      <p className="text-[0.65rem] text-slate-500 font-medium">Queue Position</p>
-                      <p className="text-sm font-semibold text-white">#3 — ~12 min</p>
-                    </div>
+                <div className="home-floating-card bottom-card">
+                  <div className="home-floating-icon blue">
+                    <MdPeople />
+                  </div>
+                  <div>
+                    <p className="home-floating-label">Queue Position</p>
+                    <p className="home-floating-value">#3 — ~12 min</p>
                   </div>
                 </div>
 
-                {/* Main card */}
-                <div className="glass-dark rounded-3xl p-6 shadow-2xl border border-white/[0.06]">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-white font-semibold font-display">Today&apos;s Schedule</h3>
-                    <span className="text-[0.65rem] text-primary-400 bg-primary-500/10 px-3 py-1 rounded-full font-semibold border border-primary-500/20">● Live</span>
+                <div className="home-main-card">
+                  <div className="home-card-header">
+                    <h3>Today's Schedule</h3>
+                    <span className="home-live-badge">● Live</span>
                   </div>
 
-                  {[
-                    { time: '09:00 AM', name: 'Dr. Ravi Kumar', dept: 'Cardiology', status: 'Completed', color: 'bg-emerald-500' },
-                    { time: '09:20 AM', name: 'Dr. Priya Sharma', dept: 'Neurology', status: 'In Progress', color: 'bg-blue-500' },
-                    { time: '10:00 AM', name: 'Dr. Amit Patel', dept: 'Orthopedics', status: 'Upcoming', color: 'bg-amber-500' },
-                    { time: '10:40 AM', name: 'Dr. Ananya Das', dept: 'Pediatrics', status: 'Upcoming', color: 'bg-slate-600' },
-                  ].map((item, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-center gap-4 p-3.5 rounded-xl mb-2 transition-all duration-200 hover:bg-white/[0.04] ${
-                        i === 1 ? 'bg-white/[0.04] border border-white/[0.06]' : ''
-                      }`}
-                    >
-                      <div className={`w-1 h-10 rounded-full ${item.color}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{item.name}</p>
-                        <p className="text-slate-600 text-xs">{item.dept}</p>
+                  <div className="home-schedule-list">
+                    {[
+                      { time: '09:00 AM', name: 'Dr. Ravi Kumar', dept: 'Cardiology', status: 'Completed', colorClass: 'status-emerald' },
+                      { time: '09:20 AM', name: 'Dr. Priya Sharma', dept: 'Neurology', status: 'In Progress', colorClass: 'status-blue', active: true },
+                      { time: '10:00 AM', name: 'Dr. Amit Patel', dept: 'Orthopedics', status: 'Upcoming', colorClass: 'status-amber' },
+                      { time: '10:40 AM', name: 'Dr. Ananya Das', dept: 'Pediatrics', status: 'Upcoming', colorClass: 'status-slate' },
+                    ].map((item, i) => (
+                      <div key={i} className={`home-schedule-item ${item.active ? 'active' : ''}`}>
+                        <div className={`home-schedule-dot ${item.colorClass}`} />
+                        <div className="home-schedule-info">
+                          <p className="home-schedule-name">{item.name}</p>
+                          <p className="home-schedule-dept">{item.dept}</p>
+                        </div>
+                        <div className="home-schedule-time">
+                          <p className="time">{item.time}</p>
+                          <p className={`status ${item.colorClass}`}>{item.status}</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-slate-500 text-xs">{item.time}</p>
-                        <p className={`text-[0.65rem] font-semibold ${
-                          item.status === 'Completed' ? 'text-emerald-400' :
-                          item.status === 'In Progress' ? 'text-blue-400' :
-                          'text-slate-600'
-                        }`}>
-                          {item.status}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 rounded-full border-2 border-slate-600 flex items-start justify-center p-1.5">
-            <div className="w-1 h-2.5 bg-slate-500 rounded-full animate-pulse-soft" />
+        <div className="home-scroll-indicator">
+          <div className="home-mouse">
+            <div className="home-mouse-wheel" />
           </div>
         </div>
       </section>
 
       {/* ==================== STATS ==================== */}
-      <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-14">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="home-stats-section">
+        <div className="home-stats-grid">
           {stats.map((stat, i) => (
-            <div
-              key={i}
-              className="glass rounded-2xl p-6 shadow-lg text-center card-hover animate-slide-up"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
-              <stat.icon className="text-xl text-primary-500 mx-auto mb-2 opacity-60" />
-              <p className="text-2xl lg:text-3xl font-bold gradient-text mb-1 font-display">{stat.value}</p>
-              <p className="text-slate-500 text-sm">{stat.label}</p>
+            <div key={i} className={`home-stat-card delay-${i}`}>
+              <stat.icon className="home-stat-icon" />
+              <p className="home-stat-value">{stat.value}</p>
+              <p className="home-stat-label">{stat.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ==================== FEATURES (Bento Grid) ==================== */}
-      <section className="py-20 lg:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 text-sm font-semibold mb-4">
-              <MdStar className="text-primary-500" />
-              Features
-            </span>
-            <h2 className="heading-lg text-3xl lg:text-4xl text-slate-900 mb-4">
-              Everything You Need for
-              <span className="gradient-text"> Smart Healthcare</span>
-            </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-              A comprehensive platform designed to streamline every aspect of hospital
-              appointment management — from booking to consultation.
-            </p>
-          </div>
+      {/* ==================== FEATURES ==================== */}
+      <section className="home-features-section">
+        <div className="home-section-header">
+          <span className="home-section-badge">
+            <MdStar /> Features
+          </span>
+          <h2>
+            Everything You Need for <span>Smart Healthcare</span>
+          </h2>
+          <p>
+            A comprehensive platform designed to streamline every aspect of hospital
+            appointment management — from booking to consultation.
+          </p>
+        </div>
 
-          {/* Bento Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className={`group bg-slate-50/80 rounded-2xl p-7 hover:bg-white hover:shadow-lg transition-all duration-300 border border-transparent hover:border-slate-100 animate-fade-in`}
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300`}>
-                  <feature.icon className="text-white text-xl" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2 font-display">{feature.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{feature.description}</p>
+        <div className="home-features-grid">
+          {features.map((feature, i) => (
+            <div key={i} className={`home-feature-card delay-${i}`}>
+              <div className={`home-feature-icon-wrapper ${feature.iconClass}`}>
+                <feature.icon className="home-feature-icon" />
               </div>
-            ))}
-          </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ==================== HOW IT WORKS ==================== */}
-      <section className="py-20 lg:py-28 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent-50 border border-accent-100 text-accent-600 text-sm font-semibold mb-4">
-              How It Works
-            </span>
-            <h2 className="heading-lg text-3xl lg:text-4xl text-slate-900 mb-4">
-              Your Appointment in
-              <span className="gradient-text"> 5 Simple Steps</span>
-            </h2>
-          </div>
+      <section className="home-how-it-works-section">
+        <div className="home-section-header">
+          <span className="home-section-badge accent">How It Works</span>
+          <h2>
+            Your Appointment in <span>5 Simple Steps</span>
+          </h2>
+        </div>
 
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-4">
-              {steps.map((step, i) => (
-                <div
-                  key={i}
-                  className="relative flex lg:flex-col items-start lg:items-center gap-5 lg:gap-4 group animate-slide-up"
-                  style={{ animationDelay: `${i * 100}ms` }}
-                >
-                  {/* Connector line */}
-                  {i < 4 && (
-                    <div className="hidden lg:block absolute top-6 left-[calc(50%+1.5rem)] right-[calc(-50%+1.5rem)] h-[2px] bg-slate-200" />
-                  )}
-
-                  <div className="relative flex-shrink-0">
-                    <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center text-white font-bold text-base shadow-md group-hover:scale-105 transition-transform duration-300 font-display">
-                      {step.number}
-                    </div>
-                  </div>
-
-                  <div className="lg:text-center flex-1">
-                    <h3 className="text-base font-semibold text-slate-900 mb-1 font-display">{step.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{step.description}</p>
-                  </div>
+        <div className="home-steps-container">
+          <div className="home-steps-grid">
+            {steps.map((step, i) => (
+              <div key={i} className={`home-step-item delay-${i}`}>
+                {i < 4 && <div className="home-step-connector" />}
+                <div className="home-step-number-container">
+                  <div className="home-step-number">{step.number}</div>
                 </div>
-              ))}
-            </div>
+                <div className="home-step-info">
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ==================== DEPARTMENTS ==================== */}
-      <section className="py-20 lg:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 text-primary-600 text-sm font-semibold mb-4">
-              Departments
-            </span>
-            <h2 className="heading-lg text-3xl lg:text-4xl text-slate-900 mb-4">
-              Specialized
-              <span className="gradient-text"> Medical Departments</span>
-            </h2>
-            <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-              Access expert care across multiple specialties. Each department is staffed with experienced professionals.
-            </p>
-          </div>
+      <section className="home-departments-section">
+        <div className="home-section-header">
+          <span className="home-section-badge">Departments</span>
+          <h2>
+            Specialized <span>Medical Departments</span>
+          </h2>
+          <p>
+            Access expert care across multiple specialties. Each department is staffed with experienced professionals.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {departments.map((dept, i) => (
-              <Link
-                key={i}
-                to="/departments"
-                className="group bg-white rounded-2xl p-6 text-center hover:shadow-md transition-all duration-200 border border-slate-100 hover:border-primary-100 animate-fade-in"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className={`w-14 h-14 rounded-2xl ${dept.bg} flex items-center justify-center mx-auto mb-4 group-hover:scale-105 transition-transform duration-200`}>
-                  <dept.icon className={`text-2xl ${dept.color}`} />
-                </div>
-                <h3 className="font-semibold text-slate-900 text-sm mb-1 font-display">{dept.name}</h3>
-                <p className="text-slate-400 text-xs">{dept.doctors} Doctors</p>
-              </Link>
-            ))}
-          </div>
+        <div className="home-departments-grid">
+          {departments.map((dept, i) => (
+            <Link key={i} to="/departments" className={`home-dept-card delay-${i}`}>
+              <div className={`home-dept-icon-wrapper ${dept.colorClass}`}>
+                <dept.icon className="home-dept-icon" />
+              </div>
+              <h3>{dept.name}</h3>
+              <p>{dept.doctors} Doctors</p>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* ==================== AI ASSISTANT CTA ==================== */}
-      <section className="py-20 lg:py-28 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl gradient-mesh p-10 lg:p-14">
-            <div className="aurora-blob aurora-blob-1 absolute top-0 right-[20%] opacity-20" />
+      {/* ==================== AI ASSISTANT ==================== */}
+      <section className="home-ai-section">
+        <div className="home-ai-container">
+          <div className="home-ai-card">
+            <div className="home-aurora blob-ai" />
 
-            <div className="relative grid lg:grid-cols-2 gap-10 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 backdrop-blur-md mb-6">
-                  <MdSmartToy className="text-violet-400" />
-                  <span className="text-violet-300 text-sm font-medium">AI-Powered Assistant</span>
+            <div className="home-ai-grid">
+              <div className="home-ai-content">
+                <div className="home-ai-badge">
+                  <MdSmartToy /> AI-Powered Assistant
                 </div>
-                <h2 className="heading-lg text-3xl lg:text-4xl text-white mb-4">
-                  Meet Your Personal
-                  <span className="block gradient-text-vivid">Healthcare Assistant</span>
+                <h2>
+                  Meet Your Personal <span>Healthcare Assistant</span>
                 </h2>
-                <p className="text-slate-400 text-lg leading-relaxed mb-8 max-w-lg">
+                <p>
                   Our AI chatbot, powered by Google Gemini, helps you find doctors,
                   discover available slots, book appointments, and track your queue —
                   all through natural conversation.
                 </p>
-                <Link
-                  to="/register"
-                  className="group inline-flex items-center gap-2 px-7 py-4 rounded-2xl text-base font-semibold text-white bg-gradient-to-r from-violet-600 to-accent-600 hover:shadow-xl hover:shadow-violet-600/25 transition-all duration-300 btn-press"
-                >
-                  <MdSmartToy />
-                  Chat with AI
-                  <MdArrowForward className="group-hover:translate-x-1 transition-transform" />
+                <Link to="/register" className="home-btn-ai">
+                  <MdSmartToy /> Chat with AI
+                  <MdArrowForward className="icon-arrow" />
                 </Link>
               </div>
 
-              {/* Chat preview */}
-              <div className="hidden lg:block">
-                <div className="glass-dark rounded-2xl p-5 max-w-sm ml-auto border border-white/[0.06]">
-                  <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/[0.06]">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-accent-500 flex items-center justify-center">
-                      <MdSmartToy className="text-white text-sm" />
+              <div className="home-ai-preview">
+                <div className="home-ai-chat-box">
+                  <div className="home-ai-chat-header">
+                    <div className="home-ai-avatar">
+                      <MdSmartToy />
                     </div>
                     <div>
-                      <p className="text-white text-sm font-semibold">AI Assistant</p>
-                      <p className="text-emerald-400 text-[0.6rem] font-medium flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> Online
+                      <p className="home-ai-name">AI Assistant</p>
+                      <p className="home-ai-status">
+                        <span className="home-ai-status-dot" /> Online
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="bg-white/[0.04] rounded-xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
-                      <p className="text-slate-300 text-sm">Hi! I need to see a cardiologist tomorrow.</p>
+                  <div className="home-ai-chat-messages">
+                    <div className="home-chat-msg user">
+                      <p>Hi! I need to see a cardiologist tomorrow.</p>
                     </div>
-                    <div className="bg-violet-500/15 rounded-xl rounded-tr-sm px-4 py-2.5 ml-auto max-w-[85%] border border-violet-500/10">
-                      <p className="text-violet-100 text-sm">
+                    <div className="home-chat-msg bot">
+                      <p>
                         I found 3 cardiologists available tomorrow. The earliest slot is with
-                        <span className="font-semibold"> Dr. Ravi Kumar at 9:20 AM</span>.
-                        Shall I book it?
+                        <strong> Dr. Ravi Kumar at 9:20 AM</strong>. Shall I book it?
                       </p>
                     </div>
-                    <div className="bg-white/[0.04] rounded-xl rounded-tl-sm px-4 py-2.5 max-w-[85%]">
-                      <p className="text-slate-300 text-sm">Yes, please!</p>
+                    <div className="home-chat-msg user">
+                      <p>Yes, please!</p>
                     </div>
-                    <div className="bg-violet-500/15 rounded-xl rounded-tr-sm px-4 py-2.5 ml-auto max-w-[85%] border border-violet-500/10">
-                      <p className="text-violet-100 text-sm">
+                    <div className="home-chat-msg bot">
+                      <p>
                         ✅ Booked! APT-20260812-0023 with Dr. Ravi Kumar, tomorrow 9:20 AM, Cardiology.
                       </p>
                     </div>
@@ -486,31 +395,25 @@ export default function Home() {
       </section>
 
       {/* ==================== FAQ ==================== */}
-      <section className="py-20 lg:py-28 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-sm font-semibold mb-4">
-              FAQ
-            </span>
-            <h2 className="heading-lg text-3xl lg:text-4xl text-slate-900 mb-4">
-              Frequently Asked
-              <span className="gradient-text"> Questions</span>
+      <section className="home-faq-section">
+        <div className="home-faq-container">
+          <div className="home-section-header">
+            <span className="home-section-badge warning">FAQ</span>
+            <h2>
+              Frequently Asked <span>Questions</span>
             </h2>
           </div>
 
-          <div className="space-y-3">
+          <div className="home-faq-list">
             {faqs.map((faq, i) => (
-              <details
-                key={i}
-                className="group bg-slate-50/80 rounded-2xl border border-slate-100 overflow-hidden hover:border-primary-200/50 transition-colors"
-              >
-                <summary className="flex items-center justify-between gap-4 p-6 cursor-pointer list-none hover:bg-slate-100/50 transition-colors">
-                  <h3 className="font-semibold text-slate-900 text-[0.95rem] font-display">{faq.q}</h3>
-                  <div className="w-7 h-7 rounded-lg bg-slate-200/60 group-open:bg-primary-100 flex items-center justify-center flex-shrink-0 transition-colors">
-                    <MdArrowForward className="text-slate-400 group-open:text-primary-600 group-open:rotate-90 transition-all duration-300 text-sm" />
+              <details key={i} className="home-faq-item">
+                <summary className="home-faq-summary">
+                  <h3>{faq.q}</h3>
+                  <div className="home-faq-icon">
+                    <MdArrowForward />
                   </div>
                 </summary>
-                <div className="px-6 pb-6 text-slate-500 text-sm leading-relaxed -mt-1">
+                <div className="home-faq-answer">
                   {faq.a}
                 </div>
               </details>
@@ -520,28 +423,21 @@ export default function Home() {
       </section>
 
       {/* ==================== FINAL CTA ==================== */}
-      <section className="py-20 lg:py-28 bg-slate-50 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <h2 className="heading-lg text-3xl lg:text-4xl text-slate-900 mb-4">
-            Ready to Experience
-            <span className="gradient-text"> Smart Healthcare?</span>
+      <section className="home-cta-section">
+        <div className="home-cta-container">
+          <h2>
+            Ready to Experience <span>Smart Healthcare?</span>
           </h2>
-          <p className="text-slate-500 text-lg mb-10 max-w-2xl mx-auto">
+          <p>
             Join thousands of patients who have already transformed their healthcare
             experience. Register today and book your first appointment in minutes.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/register"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-white gradient-primary hover:shadow-xl hover:shadow-primary-500/25 transition-all duration-300 btn-press"
-            >
+          <div className="home-cta-actions">
+            <Link to="/register" className="home-btn-primary cta-btn">
               Get Started Free
-              <MdArrowForward className="group-hover:translate-x-1 transition-transform" />
+              <MdArrowForward className="icon-arrow" />
             </Link>
-            <Link
-              to="/doctors"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all shadow-md border border-slate-200 btn-press"
-            >
+            <Link to="/doctors" className="home-btn-white cta-btn">
               Browse Doctors
             </Link>
           </div>

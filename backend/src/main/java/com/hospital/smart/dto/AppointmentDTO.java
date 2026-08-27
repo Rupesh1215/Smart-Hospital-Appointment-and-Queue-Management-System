@@ -24,7 +24,6 @@ public class AppointmentDTO {
         @NotBlank(message = "Doctor ID is required")
         private String doctorId;
 
-        @NotBlank(message = "Department ID is required")
         private String departmentId;
 
         @NotNull(message = "Appointment date is required")

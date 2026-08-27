@@ -9,6 +9,7 @@ import {
   MdCalendarMonth, MdCheckCircle, MdPeople, MdArrowForward,
   MdSchedule, MdHowToReg, MdQueue, MdPersonAdd,
 } from 'react-icons/md';
+import './ReceptionistDashboard.css';
 
 export default function ReceptionistDashboard() {
   const { user } = useAuth();
@@ -40,83 +41,81 @@ export default function ReceptionistDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="skeleton h-24 rounded-xl" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24 rounded-xl" />)}
+      <div className="rec-dash-page">
+        <div className="rec-skeleton rec-skeleton-hero" />
+        <div className="rec-stats-grid">
+          {[...Array(4)].map((_, i) => <div key={i} className="rec-skeleton rec-skeleton-card" />)}
         </div>
-        <div className="skeleton h-64 rounded-xl" />
+        <div className="rec-skeleton rec-skeleton-table" />
       </div>
     );
   }
 
   const stats = [
-    { label: "Today's Appointments", value: todayApts.length, icon: MdCalendarMonth, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Awaiting Check-In', value: pendingCount, icon: MdSchedule, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Checked In', value: checkedInCount, icon: MdHowToReg, color: 'text-violet-600', bg: 'bg-violet-50' },
-    { label: 'Completed', value: completedCount, icon: MdCheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: "Today's Appointments", value: todayApts.length, icon: MdCalendarMonth, class: 'bg-blue-50 text-blue-600' },
+    { label: 'Awaiting Check-In', value: pendingCount, icon: MdSchedule, class: 'bg-amber-50 text-amber-600' },
+    { label: 'Checked In', value: checkedInCount, icon: MdHowToReg, class: 'bg-violet-50 text-violet-600' },
+    { label: 'Completed', value: completedCount, icon: MdCheckCircle, class: 'bg-emerald-50 text-emerald-600' },
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="rec-dash-page">
       {/* Welcome + Quick Actions */}
-      <div className="bg-[#2563eb] rounded-xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="rec-welcome-card">
         <div>
-          <p className="text-blue-200 text-xs font-medium uppercase tracking-wider mb-1">Reception</p>
-          <h1 className="text-xl font-bold">Welcome, {user?.name?.split(' ')[0] || 'Receptionist'}</h1>
-          <p className="text-blue-200 text-sm mt-0.5">Manage check-ins, appointments, and patient queues.</p>
+          <p className="rec-welcome-label">Reception</p>
+          <h1 className="rec-welcome-title">Welcome, {user?.name?.split(' ')[0] || 'Receptionist'}</h1>
+          <p className="rec-welcome-desc">Manage check-ins, appointments, and patient queues.</p>
         </div>
-        <div className="flex gap-2 self-start">
-          <Link to="/receptionist/check-in" className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#2563eb] font-semibold rounded-lg hover:bg-blue-50 text-sm">
+        <div className="rec-welcome-actions">
+          <Link to="/receptionist/check-in" className="rec-action-btn primary">
             <MdHowToReg /> Check In
           </Link>
-          <Link to="/receptionist/appointments" className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 text-white font-medium rounded-lg hover:bg-white/30 text-sm">
+          <Link to="/receptionist/appointments" className="rec-action-btn secondary">
             <MdPersonAdd /> Walk-In
           </Link>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="rec-stats-grid">
         {stats.map((stat, i) => (
-          <div key={i} className="stat-card">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                <stat.icon className={`text-xl ${stat.color}`} />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                <p className="text-xs text-slate-500">{stat.label}</p>
-              </div>
+          <div key={i} className="rec-stat-card">
+            <div className={`rec-stat-icon-wrap ${stat.class.split(' ')[0]}`}>
+              <stat.icon className={stat.class.split(' ')[1]} />
+            </div>
+            <div>
+              <p className="rec-stat-value">{stat.value}</p>
+              <p className="rec-stat-label">{stat.label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Appointments Table */}
-      <div className="card">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
-          <h2 className="text-sm font-semibold text-slate-900">Today's Appointments</h2>
-          <Link to="/receptionist/appointments" className="text-xs text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
-            View All <MdArrowForward className="text-sm" />
+      <div className="rec-card">
+        <div className="rec-card-header">
+          <h2 className="rec-card-title">Today's Appointments</h2>
+          <Link to="/receptionist/appointments" className="rec-card-link">
+            View All <MdArrowForward />
           </Link>
         </div>
 
         {todayApts.length === 0 ? (
-          <div className="p-10 text-center">
-            <MdCalendarMonth className="text-3xl text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm">No appointments scheduled for today</p>
+          <div className="rec-empty-state">
+            <MdCalendarMonth />
+            <p>No appointments scheduled for today</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="rec-table-wrap">
+            <table className="rec-table">
               <thead>
                 <tr>
-                  <th className="table-header">Patient</th>
-                  <th className="table-header">Doctor</th>
-                  <th className="table-header">Time</th>
-                  <th className="table-header">Status</th>
-                  <th className="table-header">Action</th>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,27 +123,27 @@ export default function ReceptionistDashboard() {
                   const statusColor = STATUS_COLORS[apt.status] || STATUS_COLORS.PENDING;
                   const canCheckIn = apt.status === 'PENDING' || apt.status === 'CONFIRMED';
                   return (
-                    <tr key={apt.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="table-cell">
-                        <p className="font-medium text-slate-900">{apt.patientName || 'Unknown'}</p>
-                        <p className="text-xs text-slate-500">{apt.appointmentNumber}</p>
+                    <tr key={apt.id}>
+                      <td>
+                        <p className="rec-cell-title">{apt.patientName || 'Unknown'}</p>
+                        <p className="rec-cell-subtitle">{apt.appointmentNumber}</p>
                       </td>
-                      <td className="table-cell">
-                        <p className="text-slate-700">Dr. {apt.doctorName || 'Unknown'}</p>
-                        <p className="text-xs text-slate-500">{apt.departmentName || '—'}</p>
+                      <td>
+                        <p className="rec-cell-title">Dr. {apt.doctorName || 'Unknown'}</p>
+                        <p className="rec-cell-subtitle">{apt.departmentName || '—'}</p>
                       </td>
-                      <td className="table-cell text-slate-700">
+                      <td className="rec-cell-title">
                         {apt.startTime ? formatTime(apt.startTime) : '—'}
                       </td>
-                      <td className="table-cell">
-                        <span className={`badge ${statusColor.bg} ${statusColor.text}`}>
+                      <td>
+                        <span className={`rec-badge ${statusColor.bg} ${statusColor.text}`}>
                           {apt.status?.replace(/_/g, ' ')}
                         </span>
                       </td>
-                      <td className="table-cell">
+                      <td>
                         {canCheckIn && (
-                          <Link to="/receptionist/check-in" className="btn btn-sm bg-blue-50 text-blue-700 hover:bg-blue-100 font-medium">
-                            <MdHowToReg className="text-sm" /> Check In
+                          <Link to="/receptionist/check-in" className="rec-btn-sm">
+                            <MdHowToReg /> Check In
                           </Link>
                         )}
                       </td>
@@ -159,19 +158,19 @@ export default function ReceptionistDashboard() {
 
       {/* Available Doctors */}
       {doctors.length > 0 && (
-        <div className="card">
-          <div className="p-5 border-b border-slate-100">
-            <h2 className="text-sm font-semibold text-slate-900">Available Doctors</h2>
+        <div className="rec-card">
+          <div className="rec-card-header" style={{ paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+            <h2 className="rec-card-title">Available Doctors</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+          <div className="rec-docs-grid">
             {doctors.filter((d) => d.available).slice(0, 6).map((doc) => (
-              <div key={doc.id} className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 font-semibold text-sm flex-shrink-0">
+              <div key={doc.id} className="rec-doc-item">
+                <div className="rec-doc-avatar">
                   {doc.doctorName?.charAt(0)?.toUpperCase() || 'D'}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">Dr. {doc.doctorName || 'Unknown'}</p>
-                  <p className="text-xs text-slate-500">{doc.departmentName || 'General'}</p>
+                <div className="rec-doc-info">
+                  <p className="rec-doc-name">Dr. {doc.doctorName || 'Unknown'}</p>
+                  <p className="rec-doc-dept">{doc.departmentName || 'General'}</p>
                 </div>
               </div>
             ))}

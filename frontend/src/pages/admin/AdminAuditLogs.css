@@ -1,0 +1,17 @@
+/* AdminAuditLogs.css */
+.admin-audit-page { display: flex; flex-direction: column; gap: 1.5rem; animation: fade-in 0.3s ease-in-out; }
+.admin-audit-header { display: flex; flex-direction: column; gap: 1rem; }
+@media (min-width: 640px) { .admin-audit-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+.admin-audit-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.admin-audit-subtitle { font-size: 0.875rem; color: #64748b; margin: 0.25rem 0 0 0; }
+
+.admin-audit-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; overflow: hidden; }
+.admin-audit-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.admin-audit-table thead { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+.admin-audit-table th { padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.admin-audit-table td { padding: 0.75rem 1rem; color: #0f172a; border-bottom: 1px solid #f1f5f9; }
+.admin-audit-table tbody tr:hover { background: #f8fafc; }
+
+.admin-audit-action { font-weight: 600; color: #2563eb; }
+.admin-audit-details { font-size: 0.75rem; color: #64748b; }
+.admin-audit-empty { text-align: center; padding: 3rem 1rem; color: #94a3b8; }

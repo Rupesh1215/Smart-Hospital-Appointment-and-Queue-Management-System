@@ -64,10 +64,12 @@ public class AppointmentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Doctor", "id", request.getDoctorId()));
 
-        // Validate department exists
-        departmentRepository.findById(request.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Department", "id", request.getDepartmentId()));
+        // Validate department exists if provided
+        if (request.getDepartmentId() != null && !request.getDepartmentId().isEmpty()) {
+            departmentRepository.findById(request.getDepartmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Department", "id", request.getDepartmentId()));
+        }
 
         // --- Double-booking prevention ---
         List<AppointmentStatus> activeStatuses = Arrays.asList(
@@ -299,9 +301,12 @@ public class AppointmentService {
                 .orElse(null);
 
         // Resolve department name
-        String departmentName = departmentRepository.findById(apt.getDepartmentId())
-                .map(Department::getName)
-                .orElse(null);
+        String departmentName = null;
+        if (apt.getDepartmentId() != null && !apt.getDepartmentId().isEmpty()) {
+            departmentName = departmentRepository.findById(apt.getDepartmentId())
+                    .map(Department::getName)
+                    .orElse(null);
+        }
 
         return AppointmentDTO.Response.builder()
                 .id(apt.getId())

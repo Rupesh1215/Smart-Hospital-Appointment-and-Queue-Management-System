@@ -1,0 +1,26 @@
+/* AdminSettings.css */
+.admin-settings-page { display: flex; flex-direction: column; gap: 1.5rem; animation: fade-in 0.3s ease-in-out; }
+.admin-settings-header { display: flex; flex-direction: column; gap: 1rem; }
+@media (min-width: 640px) { .admin-settings-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+.admin-settings-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.admin-settings-subtitle { font-size: 0.875rem; color: #64748b; margin: 0.25rem 0 0 0; }
+
+.admin-settings-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; max-width: 800px; }
+.admin-settings-card-title { font-size: 1rem; font-weight: 600; color: #0f172a; margin: 0 0 1.25rem 0; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+
+.admin-settings-form { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 640px) { .admin-settings-form { grid-template-columns: repeat(2, 1fr); } }
+
+.admin-settings-group { display: flex; flex-direction: column; gap: 0.375rem; }
+.admin-settings-group label { font-size: 0.875rem; font-weight: 500; color: #475569; }
+.admin-settings-group input { padding: 0.625rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; color: #0f172a; outline: none; transition: border-color 0.2s; }
+.admin-settings-group input:focus { border-color: #2563eb; }
+
+.admin-settings-toggle { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: #f8fafc; border-radius: 0.5rem; border: 1px solid #e2e8f0; }
+.admin-settings-toggle span { font-size: 0.875rem; font-weight: 500; color: #475569; }
+.admin-settings-toggle input[type="checkbox"] { width: 1.25rem; height: 1.25rem; cursor: pointer; }
+
+.admin-settings-actions { margin-top: 1.5rem; display: flex; justify-content: flex-end; }
+.admin-settings-save-btn { padding: 0.625rem 1.5rem; background: #2563eb; color: #fff; border: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: background 0.2s; }
+.admin-settings-save-btn:hover { background: #1d4ed8; }
+.admin-settings-save-btn:disabled { opacity: 0.7; cursor: not-allowed; }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MdSmartToy, MdClose, MdSend, MdRefresh } from 'react-icons/md';
 import chatbotService from '../services/chatbotService';
+import './ChatbotWidget.css';
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,51 +72,51 @@ export default function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-[90]">
+    <div className="chatbot-wrapper">
       {/* Trigger Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2.5 px-4 py-3 bg-[#2563eb] text-white rounded-full shadow-lg hover:bg-[#1d4ed8] transition-all cursor-pointer"
+          className="chatbot-trigger-btn"
         >
-          <MdSmartToy className="text-xl" />
-          <span className="font-semibold text-sm">SmartCare AI</span>
-          <span className="w-2 h-2 bg-green-400 rounded-full" />
+          <MdSmartToy size={20} />
+          <span className="chatbot-trigger-text">SmartCare AI</span>
+          <span className="status-dot" />
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="w-[380px] sm:w-[400px] h-[540px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-chat-enter">
+        <div className="chatbot-window">
           {/* Header */}
-          <div className="px-4 py-3 bg-[#2563eb] text-white flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center">
-                <MdSmartToy className="text-xl" />
+          <div className="chatbot-header">
+            <div className="chatbot-header-left">
+              <div className="chatbot-header-icon">
+                <MdSmartToy size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-sm">SmartCare AI</h3>
-                <span className="text-xs text-blue-100 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                <h3 className="chatbot-header-title">SmartCare AI</h3>
+                <span className="chatbot-header-status">
+                  <span className="status-dot" />
                   Online
                 </span>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-blue-100 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="chatbot-close-btn"
             >
-              <MdClose className="text-xl" />
+              <MdClose size={20} />
             </button>
           </div>
 
           {/* Quick Actions */}
-          <div className="px-3 py-2 border-b border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar flex-shrink-0">
+          <div className="chatbot-quick-actions">
             {quickActions.map((action, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSend(action)}
-                className="whitespace-nowrap px-3 py-1 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-600 hover:text-blue-700 rounded-full text-xs font-medium transition-all cursor-pointer flex-shrink-0"
+                className="chatbot-quick-action-btn"
               >
                 {action}
               </button>
@@ -123,50 +124,42 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+          <div className="chatbot-messages">
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex gap-2.5 ${msg.sender === 'USER' ? 'justify-end' : 'justify-start'}`}
+                className={`chatbot-message-row ${msg.sender === 'USER' ? 'user' : 'ai'}`}
               >
                 {msg.sender === 'AI' && (
-                  <div className="w-7 h-7 rounded-md bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                    AI
-                  </div>
+                  <div className="chatbot-ai-avatar">AI</div>
                 )}
                 <div
-                  className={`max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed ${
-                    msg.sender === 'USER'
-                      ? 'bg-[#2563eb] text-white rounded-br-sm'
-                      : 'bg-white border border-slate-200 text-slate-700 rounded-bl-sm'
-                  }`}
+                  className={`chatbot-message-bubble ${msg.sender === 'USER' ? 'user' : 'ai'}`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <p>{msg.text}</p>
                 </div>
               </div>
             ))}
 
             {loading && (
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-md bg-[#2563eb] text-white flex items-center justify-center text-xs font-bold">
-                  AI
-                </div>
-                <div className="px-4 py-3 bg-white border border-slate-200 rounded-xl rounded-bl-sm flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.15s]" />
-                  <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.3s]" />
+              <div className="chatbot-message-row ai">
+                <div className="chatbot-ai-avatar">AI</div>
+                <div className="chatbot-typing-indicator">
+                  <div className="chatbot-dot" />
+                  <div className="chatbot-dot" />
+                  <div className="chatbot-dot" />
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="flex items-center justify-center gap-2 py-2">
-                <span className="text-xs text-red-500">{error}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px 0' }}>
+                <span style={{ fontSize: '12px', color: '#ef4444' }}>{error}</span>
                 <button
                   onClick={handleRetry}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#2563eb', border: 'none', background: 'none', cursor: 'pointer', fontWeight: 500 }}
                 >
-                  <MdRefresh className="text-sm" /> Retry
+                  <MdRefresh size={14} /> Retry
                 </button>
               </div>
             )}
@@ -175,21 +168,21 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Input */}
-          <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 flex-shrink-0">
+          <div className="chatbot-input-area">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               placeholder="Ask about doctors, appointments, or your queue..."
-              className="flex-1 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 text-slate-800 placeholder-slate-400"
+              className="chatbot-input"
             />
             <button
               onClick={() => handleSend()}
               disabled={loading || !input.trim()}
-              className="p-2 bg-[#2563eb] text-white rounded-lg hover:bg-[#1d4ed8] disabled:opacity-40 transition-colors cursor-pointer"
+              className="chatbot-send-btn"
             >
-              <MdSend className="text-lg" />
+              <MdSend size={18} />
             </button>
           </div>
         </div>

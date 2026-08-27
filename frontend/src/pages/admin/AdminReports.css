@@ -1,0 +1,18 @@
+/* AdminReports.css */
+.admin-rep-page { display: flex; flex-direction: column; gap: 1.5rem; animation: fade-in 0.3s ease-in-out; }
+.admin-rep-header { display: flex; flex-direction: column; gap: 1rem; }
+@media (min-width: 640px) { .admin-rep-header { flex-direction: row; align-items: center; justify-content: space-between; } }
+.admin-rep-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.admin-rep-subtitle { font-size: 0.875rem; color: #64748b; margin: 0.25rem 0 0 0; }
+
+.admin-rep-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 1024px) { .admin-rep-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.admin-rep-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; display: flex; flex-direction: column; }
+.admin-rep-card-title { font-size: 1rem; font-weight: 600; color: #0f172a; margin: 0 0 1.25rem 0; }
+
+.admin-rep-chart-container { flex: 1; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+
+.admin-rep-empty { text-align: center; color: #94a3b8; }
+.admin-rep-empty svg { font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem; }
+.admin-rep-empty p { margin: 0; font-size: 0.875rem; }

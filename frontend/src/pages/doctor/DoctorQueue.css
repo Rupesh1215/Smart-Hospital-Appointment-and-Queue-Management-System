@@ -1,0 +1,156 @@
+/* DoctorQueue.css */
+
+.doc-queue-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.doc-queue-title { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.doc-queue-subtitle { font-size: 0.875rem; color: #64748b; margin: 0.25rem 0 0 0; }
+
+/* Stats Row */
+.dq-stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 768px) { .dq-stats-row { grid-template-columns: repeat(4, 1fr); } }
+
+.dq-stat {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dq-stat-icon {
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.dq-stat-icon svg { font-size: 1.25rem; }
+.dq-stat-value { font-size: 1.5rem; font-weight: 700; color: #0f172a; margin: 0; }
+.dq-stat-label { font-size: 0.75rem; color: #64748b; margin: 0; }
+
+/* Queue Actions Bar */
+.dq-actions-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dq-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.dq-action-btn.call { background: #2563eb; color: #fff; }
+.dq-action-btn.call:hover { background: #1d4ed8; }
+.dq-action-btn.start { background: #16a34a; color: #fff; }
+.dq-action-btn.start:hover { background: #15803d; }
+.dq-action-btn.complete { background: #7c3aed; color: #fff; }
+.dq-action-btn.complete:hover { background: #6d28d9; }
+.dq-action-btn.skip { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.dq-action-btn.skip:hover { background: #e2e8f0; }
+.dq-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Queue List */
+.dq-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.dq-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dq-card-title { font-size: 1rem; font-weight: 600; color: #0f172a; margin: 0; }
+
+.dq-queue-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dq-queue-entry {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: background 0.15s;
+}
+
+.dq-queue-entry:hover { background: #f8fafc; }
+
+.dq-queue-entry.active-entry {
+  background: #eff6ff;
+  border-left: 3px solid #2563eb;
+}
+
+.dq-entry-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.dq-token {
+  width: 2.25rem; height: 2.25rem;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+  background: #eff6ff; color: #1d4ed8;
+  flex-shrink: 0;
+}
+
+.dq-token.called { background: #fef3c7; color: #92400e; }
+.dq-token.in-consult { background: #ccfbf1; color: #115e59; }
+.dq-token.completed { background: #dcfce7; color: #166534; }
+.dq-token.skipped { background: #f1f5f9; color: #64748b; }
+
+.dq-entry-name { font-weight: 500; color: #0f172a; font-size: 0.875rem; margin: 0; }
+.dq-entry-sub { font-size: 0.75rem; color: #64748b; margin: 0; }
+
+.dq-entry-right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+.dq-entry-status {
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.dq-entry-status.WAITING { background: #fef3c7; color: #92400e; }
+.dq-entry-status.CALLED { background: #dbeafe; color: #1e40af; }
+.dq-entry-status.IN_CONSULTATION { background: #ccfbf1; color: #115e59; }
+.dq-entry-status.COMPLETED { background: #dcfce7; color: #166534; }
+.dq-entry-status.SKIPPED { background: #f1f5f9; color: #475569; }
+
+.dq-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+}
+
+.dq-empty svg { font-size: 3rem; color: #cbd5e1; margin-bottom: 0.5rem; }
+.dq-empty p { margin: 0; font-size: 0.875rem; }
