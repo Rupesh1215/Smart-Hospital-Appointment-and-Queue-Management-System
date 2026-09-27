@@ -24,6 +24,7 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
+    private final org.springframework.context.ApplicationContext applicationContext;
 
     /** Simple counter for appointment numbers. In production, use a database sequence. */
     private final AtomicLong counter = new AtomicLong(1);
@@ -31,11 +32,13 @@ public class AppointmentService {
     public AppointmentService(AppointmentRepository appointmentRepository,
                               DoctorRepository doctorRepository,
                               PatientRepository patientRepository,
-                              DepartmentRepository departmentRepository) {
+                              DepartmentRepository departmentRepository,
+                              org.springframework.context.ApplicationContext applicationContext) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -92,18 +95,8 @@ public class AppointmentService {
                     "The selected time slot is already booked. Please choose another slot.");
         }
 
-        // Check if patient already has an appointment with this doctor on the same day
-        List<Appointment> patientAppointments = appointmentRepository
-                .findByDoctorIdAndAppointmentDateAndStatusIn(
-                        request.getDoctorId(), request.getAppointmentDate(), activeStatuses)
-                .stream()
-                .filter(apt -> apt.getPatientId().equals(patientId))
-                .collect(Collectors.toList());
-
-        if (!patientAppointments.isEmpty()) {
-            throw new SlotUnavailableException(
-                    "You already have an active appointment with this doctor on this date.");
-        }
+        // Allow multiple appointments by the same patient with the same doctor on the same day.
+        // (Validation removed as per request)
 
         // Check daily patient limit
         long dailyCount = appointmentRepository.countByDoctorIdAndAppointmentDateAndStatusIn(
@@ -138,6 +131,18 @@ public class AppointmentService {
                 .build();
 
         appointment = appointmentRepository.save(appointment);
+        
+        // Auto check-in if the appointment is for today
+        if (appointment.getAppointmentDate().equals(LocalDate.now())) {
+            try {
+                QueueService queueService = applicationContext.getBean(QueueService.class);
+                queueService.checkIn(appointment.getId());
+                appointment = appointmentRepository.findById(appointment.getId()).orElse(appointment);
+            } catch (Exception e) {
+                System.err.println("Failed to auto check-in: " + e.getMessage());
+            }
+        }
+        
         return toResponse(appointment);
     }
 

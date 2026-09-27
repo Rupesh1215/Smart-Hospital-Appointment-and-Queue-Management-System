@@ -93,8 +93,9 @@ export default function DoctorDashboard() {
 
   const todayApts = appointments.filter((a) => a.appointmentDate && isToday(a.appointmentDate));
   const completedCount = todayApts.filter((a) => a.status === 'COMPLETED').length;
-  const waitingCount = queue?.entries?.filter((e) => e.status === 'WAITING').length || 0;
-  const currentToken = queue?.currentTokenNumber || 0;
+  const waitingCount = Array.isArray(queue) ? queue.filter((e) => e.status === 'WAITING').length : 0;
+  const currentEntry = Array.isArray(queue) ? queue.find((e) => e.status === 'CALLED' || e.status === 'IN_CONSULTATION') : null;
+  const currentToken = currentEntry ? currentEntry.queueNumber : 0;
 
   const stats = [
     { label: "Today's Appts", value: todayApts.length, icon: MdSchedule, color: '#2563eb', bg: '#eff6ff' },
@@ -146,7 +147,10 @@ export default function DoctorDashboard() {
             {todayApts.length === 0 ? (
               <p className="doc-queue-empty">No appointments today.</p>
             ) : (
-              todayApts.map((apt) => (
+              todayApts.map((apt) => {
+                const qEntry = Array.isArray(queue) ? queue.find(q => q.appointmentId === apt.id) : null;
+                const tokenNum = qEntry ? qEntry.queueNumber : '-';
+                return (
                 <div
                   key={apt.id}
                   onClick={() => setSelectedAppointment(apt)}
@@ -155,15 +159,15 @@ export default function DoctorDashboard() {
                   <div className="doc-queue-item-row">
                     <span className="doc-queue-item-name">{apt.patientName || 'Patient'}</span>
                     <span className="doc-token-badge">
-                      #{apt.tokenNumber || 1}
+                      #{tokenNum}
                     </span>
                   </div>
                   <div className="doc-queue-item-info">
-                    <span>{apt.timeSlot || '09:00 AM'}</span>
+                    <span>{apt.startTime ? formatTime(apt.startTime) : '09:00 AM'}</span>
                     <span className="doc-queue-status">{apt.status}</span>
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>
@@ -189,7 +193,7 @@ export default function DoctorDashboard() {
                 </div>
                 <div className="doc-info-block token">
                   <p>Token</p>
-                  <p>#{selectedAppointment.tokenNumber || 1}</p>
+                  <p>#{Array.isArray(queue) && queue.find(q => q.appointmentId === selectedAppointment.id)?.queueNumber || '-'}</p>
                 </div>
               </div>
 

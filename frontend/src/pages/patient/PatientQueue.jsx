@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
 import queueService from '../../services/queueService';
 import useWebSocket from '../../hooks/useWebSocket';
-import { formatTime, formatWaitingTime } from '../../utils/dateUtils';
+import { formatTime, formatWaitingTime, isToday } from '../../utils/dateUtils';
 import {
   MdAccessTime,
   MdPeople,
@@ -36,9 +36,10 @@ export default function PatientQueue() {
       const allApts = aptRes.data.data || [];
       setAppointments(allApts);
 
-      // Look for checked-in or in-queue appointments
+      // Look for checked-in or in-queue appointments, or completed ones from today
       const activeApt = allApts.find((apt) =>
-        ['CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION'].includes(apt.status)
+        ['CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION'].includes(apt.status) ||
+        (apt.status === 'COMPLETED' && apt.appointmentDate && isToday(apt.appointmentDate))
       );
 
       if (activeApt) {

@@ -119,7 +119,7 @@ export default function ReceptionistQueue() {
             {queueEntries.map((entry) => (
               <div key={entry.id} className={`rec-q-entry ${['CALLED', 'IN_CONSULTATION'].includes(entry.status) ? 'highlight' : ''}`}>
                 <div className="rec-q-entry-left">
-                  <div className="rec-q-token">{entry.tokenNumber || '#'}</div>
+                  <div className="rec-q-token">{entry.queueNumber ? `#${entry.queueNumber}` : '#'}</div>
                   <div>
                     <p className="rec-q-entry-name">{entry.patientName || 'Patient'}</p>
                     <p className="rec-q-entry-sub">{entry.startTime ? formatTime(entry.startTime) : ''}</p>

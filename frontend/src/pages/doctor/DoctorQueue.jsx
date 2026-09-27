@@ -165,7 +165,7 @@ export default function DoctorQueue() {
               >
                 <div className="dq-entry-left">
                   <div className={`dq-token ${getTokenClass(entry.status)}`}>
-                    {entry.tokenNumber || '#'}
+                    {entry.queueNumber ? `#${entry.queueNumber}` : '#'}
                   </div>
                   <div>
                     <p className="dq-entry-name">{entry.patientName || 'Patient'}</p>
