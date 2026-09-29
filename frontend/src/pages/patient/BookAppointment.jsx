@@ -1,48 +1,65 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
 import appointmentService from '../../services/appointmentService';
 import { formatTime } from '../../utils/dateUtils';
-import { isNotPastDate } from '../../utils/validators';
 import toast from 'react-hot-toast';
 import {
-  MdSearch,
-  MdLocalHospital,
-  MdCalendarMonth,
-  MdAccessTime,
-  MdArrowBack,
-  MdArrowForward,
-  MdCheckCircle,
-  MdFilterList,
-  MdStar,
-  MdWork,
-  MdCurrencyRupee,
+  MdSearch, MdLocalHospital, MdCalendarMonth, MdAccessTime,
+  MdArrowBack, MdArrowForward, MdCheckCircle, MdStar,
+  MdWork, MdCurrencyRupee, MdPeople, MdVerified,
 } from 'react-icons/md';
 import './BookAppointment.css';
 
+const DEPT_ICONS = {
+  Cardiology: '❤️', Neurology: '🧠', Orthopedics: '🦴', Dermatology: '🌿',
+  'General Medicine': '🏥', Pediatrics: '👶', ENT: '👂', Ophthalmology: '👁️',
+  Psychiatry: '🧩', Oncology: '🔬', Radiology: '📡', Gynecology: '🌸',
+};
+
+const getTodayDateStr = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+function StarRating({ rating }) {
+  return (
+    <div className="ba-stars">
+      {[1,2,3,4,5].map(s => (
+        <MdStar key={s} style={{ color: s <= Math.round(rating) ? '#F59E0B' : '#D1D5DB', fontSize: '0.9rem' }} />
+      ))}
+      <span className="ba-rating-val">{(rating || 4.5).toFixed(1)}</span>
+    </div>
+  );
+}
+
 export default function BookAppointment() {
-  // Step state: 1=select doctor, 2=select slot, 3=confirm
-  const [step, setStep] = useState(1);
-  const [doctors, setDoctors] = useState([]);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryDoctorId = searchParams.get('doctorId');
+  const queryDeptId = searchParams.get('departmentId') || searchParams.get('deptId');
+
+  // Step: 0=departments, 1=doctors, 2=pick slot, 3=confirm
+  const [step, setStep] = useState(0);
   const [departments, setDepartments] = useState([]);
+  const [doctors, setDoctors] = useState([]);   // all doctors for selected dept
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [booking, setBooking] = useState(false);
 
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDept, setSelectedDept] = useState('');
-
-  // Selection
+  const [selectedDept, setSelectedDept] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [reason, setReason] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
@@ -50,10 +67,36 @@ export default function BookAppointment() {
         doctorService.getAll(),
         departmentService.getAll(),
       ]);
-      setDoctors(doctorsRes.data.data || []);
-      setDepartments(deptsRes.data.data || []);
-    } catch (err) {
-      toast.error('Failed to load doctors');
+      const allDocs = doctorsRes.data?.data || [];
+      const allDepts = deptsRes.data?.data || [];
+      setDoctors(allDocs);
+      setDepartments(allDepts);
+
+      const todayStr = getTodayDateStr();
+
+      if (queryDoctorId) {
+        const doc = allDocs.find((d) => d.id === queryDoctorId);
+        if (doc) {
+          setSelectedDoctor(doc);
+          const dept = allDepts.find((dp) => dp.id === doc.departmentId);
+          if (dept) setSelectedDept(dept);
+          setSelectedDate(todayStr);
+          fetchSlots(doc.id, todayStr);
+          setStep(2);
+          return;
+        }
+      }
+
+      if (queryDeptId) {
+        const dept = allDepts.find((dp) => dp.id === queryDeptId);
+        if (dept) {
+          setSelectedDept(dept);
+          setStep(1);
+          return;
+        }
+      }
+    } catch {
+      toast.error('Failed to load data from server');
     } finally {
       setLoading(false);
     }
@@ -63,201 +106,224 @@ export default function BookAppointment() {
     setSlotsLoading(true);
     try {
       const res = await doctorService.getSlots(doctorId, date);
-      setSlots(res.data.data || []);
-    } catch (err) {
-      toast.error('Failed to load slots');
+      setSlots(res.data?.data || []);
+    } catch {
+      toast.error('Failed to load available slots');
       setSlots([]);
     } finally {
       setSlotsLoading(false);
     }
   };
 
+  const handleSelectDept = (dept) => {
+    setSelectedDept(dept);
+    setSearchTerm('');
+    setStep(1);
+  };
+
   const handleSelectDoctor = (doctor) => {
     setSelectedDoctor(doctor);
-    setStep(2);
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayDateStr();
     setSelectedDate(today);
     fetchSlots(doctor.id, today);
+    setStep(2);
   };
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setSelectedSlot(null);
-    if (selectedDoctor) {
+    if (selectedDoctor?.id) {
       fetchSlots(selectedDoctor.id, date);
     }
   };
 
   const handleSelectSlot = (slot) => {
-    if (!slot.available) return;
+    if (!(slot.isAvailable ?? slot.available)) return;
     setSelectedSlot(slot);
     setStep(3);
   };
 
   const handleBook = async () => {
     if (!selectedDoctor || !selectedSlot || !selectedDate) return;
-
     setBooking(true);
     try {
       await appointmentService.create({
         doctorId: selectedDoctor.id,
-        departmentId: selectedDoctor.departmentId,
+        departmentId: selectedDoctor.departmentId || selectedDept?.id,
         appointmentDate: selectedDate,
         startTime: selectedSlot.startTime,
         reason: reason || 'General Consultation',
+        bookingType: 'ONLINE',
       });
       toast.success('Appointment booked successfully!');
-      // Reset
-      setStep(1);
-      setSelectedDoctor(null);
-      setSelectedSlot(null);
-      setSelectedDate('');
-      setReason('');
+      setStep(0); setSelectedDept(null); setSelectedDoctor(null);
+      setSelectedSlot(null); setSelectedDate(''); setReason('');
+      navigate('/patient/appointments');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to book appointment');
+      toast.error(err.response?.data?.message || 'Failed to book appointment. Slot may already be taken.');
     } finally {
       setBooking(false);
     }
   };
 
-  const filteredDoctors = doctors.filter((doc) => {
-    const matchSearch =
-      !searchTerm ||
-      doc.doctorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchDept = !selectedDept || doc.departmentId === selectedDept;
-    return matchSearch && matchDept && doc.available;
-  });
+  /* Doctors filtered to selected department */
+  const deptDoctors = selectedDept
+    ? doctors.filter((d) => d.departmentId === selectedDept.id && d.isAvailable !== false)
+    : doctors.filter((d) => d.isAvailable !== false);
 
-  // Generate next 7 dates for quick selection
+  const filteredDoctors = deptDoctors.filter((d) =>
+    !searchTerm ||
+    (d.doctorName || d.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (d.specialization || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  /* Next 7 days */
   const dateOptions = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const val = `${year}-${month}-${day}`;
     return {
-      value: date.toISOString().split('T')[0],
-      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }),
-      day: date.toLocaleDateString('en-IN', { weekday: 'short' }),
-      dateNum: date.getDate(),
+      value: val,
+      label: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }),
+      day: d.toLocaleDateString('en-IN', { weekday: 'short' }),
+      dateNum: d.getDate(),
     };
   });
 
-  if (loading) {
-    return (
-      <div className="book-loader-wrap">
-        <div className="book-loader" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="book-loader-wrap"><div className="book-loader" /></div>
+  );
 
   return (
     <div className="book-apt-page">
-      {/* Progress Steps */}
+      {/* Progress */}
       <div className="book-steps-card">
         <div className="book-steps-container">
           {[
-            { num: 1, label: 'Select Doctor' },
-            { num: 2, label: 'Choose Slot' },
-            { num: 3, label: 'Confirm' },
+            { num: 1, label: 'Department' },
+            { num: 2, label: 'Doctor' },
+            { num: 3, label: 'Choose Slot' },
+            { num: 4, label: 'Confirm' },
           ].map((s, i) => (
             <div key={s.num} className="book-step-wrapper">
-              <div className={`book-step-circle ${step >= s.num ? 'active' : 'inactive'}`}>
-                {step > s.num ? <MdCheckCircle /> : s.num}
+              <div className={`book-step-circle ${step + 1 >= s.num ? 'active' : 'inactive'}`}>
+                {step + 1 > s.num ? <MdCheckCircle /> : s.num}
               </div>
-              <span className={`book-step-label ${step >= s.num ? 'active' : 'inactive'}`}>
-                {s.label}
-              </span>
-              {i < 2 && (
-                <div className={`book-step-line ${step > s.num ? 'active' : 'inactive'}`} />
-              )}
+              <span className={`book-step-label ${step + 1 >= s.num ? 'active' : 'inactive'}`}>{s.label}</span>
+              {i < 3 && <div className={`book-step-line ${step + 1 > s.num ? 'active' : 'inactive'}`} />}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Step 1: Select Doctor */}
+      {/* ── STEP 0: Departments ── */}
+      {step === 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <h2 className="book-section-title">Select a Department</h2>
+          {departments.length === 0 ? (
+            <div className="book-empty-state">
+              <MdLocalHospital />
+              <p>No departments available. Please contact administration.</p>
+            </div>
+          ) : (
+            <div className="book-dept-grid">
+              {departments.map(dept => {
+                const docCount = doctors.filter(d => d.departmentId === dept.id).length;
+                return (
+                  <button key={dept.id} className="book-dept-card" onClick={() => handleSelectDept(dept)}>
+                    <span className="book-dept-emoji">{DEPT_ICONS[dept.name] || '🏥'}</span>
+                    <div className="book-dept-info">
+                      <span className="book-dept-name">{dept.name}</span>
+                      <span className="book-dept-sub">{docCount} doctor{docCount !== 1 ? 's' : ''} available</span>
+                    </div>
+                    <MdArrowForward className="book-dept-arrow" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── STEP 1: Doctors ── */}
       {step === 1 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h2 className="book-section-title">Find a Doctor</h2>
+          <button onClick={() => { setStep(0); setSelectedDept(null); }} className="book-back-btn">
+            <MdArrowBack /> Back to Departments
+          </button>
 
-          {/* Search & Filter */}
-          <div className="book-panel">
-            <div className="book-filters-row">
-              <div className="book-search-wrap">
-                <MdSearch />
-                <input
-                  type="text"
-                  placeholder="Search by name or specialization..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="book-search-input"
-                />
-              </div>
-              <select
-                value={selectedDept}
-                onChange={(e) => setSelectedDept(e.target.value)}
-                className="book-select-input"
-                style={{ width: 'auto', flexShrink: 0 }}
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
+          <div className="book-dept-header-card">
+            <span className="book-dept-header-emoji">{DEPT_ICONS[selectedDept?.name] || '🏥'}</span>
+            <div>
+              <h2 className="book-dept-header-title">{selectedDept?.name}</h2>
+              <p className="book-dept-header-sub">{filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''} available</p>
             </div>
           </div>
 
-          {/* Doctor Cards */}
+          <div className="book-panel">
+            <div className="book-search-wrap">
+              <MdSearch />
+              <input
+                type="text"
+                placeholder="Search by name or specialization..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="book-search-input"
+              />
+            </div>
+          </div>
+
           {filteredDoctors.length === 0 ? (
             <div className="book-empty-state">
               <MdLocalHospital />
-              <p>No doctors found matching your criteria.</p>
+              <p>No doctors found for this department.</p>
             </div>
           ) : (
-            <div className="book-doc-grid">
-              {filteredDoctors.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="book-doc-card"
-                  onClick={() => handleSelectDoctor(doc)}
-                >
-                  <div className="book-doc-avatar">
-                    {doc.doctorName?.charAt(0) || 'D'}
+            <div className="book-doctor-cards-grid">
+              {filteredDoctors.map(doc => (
+                <div key={doc.id} className="book-doctor-card">
+                  <div className="bdc-photo-wrap">
+                    <div className="bdc-avatar">{doc.doctorName?.charAt(0) || 'D'}</div>
+                    <span className="bdc-available-badge">Available</span>
                   </div>
-                  <div className="book-doc-info">
-                    <h3 className="book-doc-name">
-                      Dr. {doc.doctorName}
-                    </h3>
-                    <p className="book-doc-spec">
-                      {doc.specialization}
-                    </p>
-                    <p className="book-doc-dept">
-                      {doc.departmentName || 'General'}
-                    </p>
+                  <div className="bdc-body">
+                    <div className="bdc-name-row">
+                      <h3 className="bdc-name">Dr. {doc.doctorName}</h3>
+                      <MdVerified className="bdc-verified" />
+                    </div>
+                    <p className="bdc-spec">{doc.specialization}</p>
+                    {doc.qualification && <p className="bdc-qual">{doc.qualification}</p>}
 
-                    <div className="book-doc-meta">
+                    <StarRating rating={doc.rating || 4.5} />
+
+                    <div className="bdc-stats">
                       {doc.experience > 0 && (
-                        <div className="book-doc-meta-item">
-                          <MdWork />
-                          {doc.experience} yrs
+                        <div className="bdc-stat-item">
+                          <MdWork className="bdc-stat-icon" />
+                          <span>{doc.experience} yrs exp</span>
+                        </div>
+                      )}
+                      {doc.maxPatientsPerDay > 0 && (
+                        <div className="bdc-stat-item">
+                          <MdPeople className="bdc-stat-icon" />
+                          <span>Up to {doc.maxPatientsPerDay}/day</span>
                         </div>
                       )}
                       {doc.consultationFee > 0 && (
-                        <div className="book-doc-meta-item">
-                          <MdCurrencyRupee />
-                          ₹{doc.consultationFee}
-                        </div>
-                      )}
-                      {doc.qualification && (
-                        <div className="book-doc-meta-item">
-                          {doc.qualification}
+                        <div className="bdc-stat-item fee">
+                          <MdCurrencyRupee className="bdc-stat-icon" />
+                          <span>₹{doc.consultationFee}</span>
                         </div>
                       )}
                     </div>
+
+                    <button className="bdc-book-btn" onClick={() => handleSelectDoctor(doc)}>
+                      Book Appointment <MdArrowForward />
+                    </button>
                   </div>
-                  <MdArrowForward className="book-doc-arrow" />
                 </div>
               ))}
             </div>
@@ -265,36 +331,28 @@ export default function BookAppointment() {
         </div>
       )}
 
-      {/* Step 2: Select Slot */}
+      {/* ── STEP 2: Slot picker ── */}
       {step === 2 && selectedDoctor && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={() => { setStep(1); setSelectedSlot(null); }}
-            className="book-back-btn"
-          >
-            <MdArrowBack />
-            Back to Doctors
+          <button onClick={() => { setStep(1); setSelectedSlot(null); }} className="book-back-btn">
+            <MdArrowBack /> Back to Doctors
           </button>
 
-          {/* Selected Doctor Card */}
           <div className="book-panel" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div className="book-doc-avatar" style={{ width: '3.5rem', height: '3.5rem' }}>
               {selectedDoctor.doctorName?.charAt(0)}
             </div>
             <div>
-              <h3 className="book-doc-name">
-                Dr. {selectedDoctor.doctorName}
-              </h3>
+              <h3 className="book-doc-name">Dr. {selectedDoctor.doctorName}</h3>
               <p className="book-doc-spec">{selectedDoctor.specialization}</p>
               <p className="book-doc-dept">{selectedDoctor.departmentName}</p>
             </div>
           </div>
 
-          {/* Date Selection */}
           <div className="book-panel">
             <h3 className="book-panel-title">Select Date</h3>
             <div className="book-date-row">
-              {dateOptions.map((d) => (
+              {dateOptions.map(d => (
                 <button
                   key={d.value}
                   onClick={() => handleDateChange(d.value)}
@@ -307,128 +365,96 @@ export default function BookAppointment() {
             </div>
           </div>
 
-          {/* Time Slots */}
           <div className="book-panel">
             <h3 className="book-panel-title">
               Available Slots
               {selectedDate && (
-                <span>
-                  for {new Date(selectedDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
-                </span>
+                <span> for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
               )}
             </h3>
-
             {slotsLoading ? (
-              <div className="book-loader-wrap book-loader-py">
-                <div className="book-loader small" />
-              </div>
+              <div className="book-loader-wrap book-loader-py"><div className="book-loader small" /></div>
             ) : slots.length === 0 ? (
               <div className="book-empty-state" style={{ padding: '3rem 1rem' }}>
                 <MdAccessTime />
-                <p>No slots available for this date.</p>
-                <p style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>Try selecting a different date.</p>
+                <p>No slots available for this date. Doctor may not work on this day.</p>
               </div>
             ) : (
               <div className="book-slot-grid">
-                {slots.map((slot, i) => (
-                  <button
-                    key={i}
-                    onClick={() => slot.available && handleSelectSlot(slot)}
-                    disabled={!slot.available}
-                    className={`book-slot-btn ${
-                      !slot.available
-                        ? 'unavailable'
-                        : selectedSlot?.startTime === slot.startTime
-                        ? 'active'
-                        : 'available'
-                    }`}
-                  >
-                    {formatTime(slot.startTime)}
-                  </button>
-                ))}
+                {slots.map((slot, i) => {
+                  const isAvailable = (slot.isAvailable ?? slot.available) === true;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => isAvailable && handleSelectSlot(slot)}
+                      disabled={!isAvailable}
+                      className={`book-slot-btn ${!isAvailable ? 'unavailable' : selectedSlot?.startTime === slot.startTime ? 'active' : 'available'}`}
+                    >
+                      {formatTime(slot.startTime)}
+                      {!isAvailable && <span style={{ display: 'block', fontSize: '0.6rem', opacity: 0.7 }}>Booked</span>}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Step 3: Confirm */}
+      {/* ── STEP 3: Confirm ── */}
       {step === 3 && selectedDoctor && selectedSlot && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <button
-            onClick={() => setStep(2)}
-            className="book-back-btn"
-          >
-            <MdArrowBack />
-            Back to Slots
+          <button onClick={() => setStep(2)} className="book-back-btn">
+            <MdArrowBack /> Back to Slots
           </button>
-
           <div className="book-confirm-card">
             <div className="book-confirm-header">
-              <div className="book-confirm-icon-wrap">
-                <MdCheckCircle />
-              </div>
+              <div className="book-confirm-icon-wrap"><MdCheckCircle /></div>
               <h2 className="book-confirm-title">Confirm Appointment</h2>
               <p className="book-confirm-subtitle">Review the details below</p>
             </div>
-
             <div className="book-confirm-details">
               <div className="book-confirm-row">
                 <span className="book-confirm-label">Doctor</span>
-                <span className="book-confirm-val">
-                  Dr. {selectedDoctor.doctorName}
-                </span>
+                <span className="book-confirm-val">Dr. {selectedDoctor.doctorName}</span>
               </div>
               <div className="book-confirm-row">
                 <span className="book-confirm-label">Department</span>
-                <span className="book-confirm-val">
-                  {selectedDoctor.departmentName || 'General'}
-                </span>
+                <span className="book-confirm-val">{selectedDoctor.departmentName || selectedDept?.name || 'General'}</span>
               </div>
               <div className="book-confirm-row">
                 <span className="book-confirm-label">Date</span>
                 <span className="book-confirm-val">
-                  {new Date(selectedDate).toLocaleDateString('en-IN', {
-                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                  })}
+                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
               </div>
               <div className="book-confirm-row">
                 <span className="book-confirm-label">Time</span>
-                <span className="book-confirm-val">
-                  {formatTime(selectedSlot.startTime)} — {formatTime(selectedSlot.endTime)}
-                </span>
+                <span className="book-confirm-val">{formatTime(selectedSlot.startTime)} — {formatTime(selectedSlot.endTime)}</span>
               </div>
               {selectedDoctor.consultationFee > 0 && (
                 <div className="book-confirm-row">
                   <span className="book-confirm-label">Fee</span>
-                  <span className="book-confirm-val fee">
-                    ₹{selectedDoctor.consultationFee}
-                  </span>
+                  <span className="book-confirm-val fee">₹{selectedDoctor.consultationFee}</span>
                 </div>
               )}
+              <div className="book-confirm-row">
+                <span className="book-confirm-label">Status</span>
+                <span className="book-confirm-val" style={{ color: '#16a34a', fontWeight: 700 }}>CONFIRMED</span>
+              </div>
             </div>
-
-            {/* Reason */}
             <div className="book-reason-group">
-              <label className="book-reason-label">
-                Reason for visit (optional)
-              </label>
+              <label className="book-reason-label">Reason for visit (optional)</label>
               <textarea
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={e => setReason(e.target.value)}
                 placeholder="Brief description of your symptoms or reason..."
                 rows={3}
                 className="book-reason-input"
               />
             </div>
-
-            <button
-              onClick={handleBook}
-              disabled={booking}
-              className="book-submit-btn"
-            >
-              {booking ? 'Booking...' : 'Confirm Booking'}
+            <button onClick={handleBook} disabled={booking} className="book-submit-btn">
+              {booking ? 'Booking…' : 'Confirm Booking'}
             </button>
           </div>
         </div>

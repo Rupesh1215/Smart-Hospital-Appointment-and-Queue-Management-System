@@ -29,10 +29,11 @@ export default function PatientAppointments() {
   const fetchAppointments = async () => {
     setLoading(true);
     try {
-      const res = await appointmentService.getAll();
-      setAppointments(res.data.data || []);
+      const res = await appointmentService.getMine();
+      setAppointments(res.data?.data || []);
     } catch (err) {
       toast.error('Failed to load appointments');
+      console.error(err);
     } finally {
       setLoading(false);
     }

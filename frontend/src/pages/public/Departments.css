@@ -1,0 +1,306 @@
+/* Departments.css — a searchable directory: glowing search pill, cards that rise on scroll, shimmering skeletons */
+
+.departments-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.dept-main {
+  flex: 1;
+  padding-top: 4.5rem;
+}
+
+.dept-hero-section {
+  position: relative;
+  overflow: hidden;
+  padding: 4.75rem 1.5rem 4.25rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(rgba(11, 51, 48, 0.12) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(42rem 26rem at 92% 0%, rgba(255, 182, 39, 0.22), transparent 65%),
+    radial-gradient(44rem 28rem at 0% 0%, rgba(26, 156, 122, 0.2), transparent 65%),
+    linear-gradient(180deg, #E9F7F0, var(--hq-mist));
+}
+
+.dept-hero-section::before {
+  content: "";
+  position: absolute;
+  top: -8rem;
+  right: -6rem;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  background: radial-gradient(circle, var(--hq-token), transparent 65%);
+  animation: dept-drift 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.dept-hero-content {
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.dept-hero-content>* {
+  animation: dept-rise 0.8s var(--hq-ease) both;
+}
+
+.dept-hero-content> :nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.dept-hero-content> :nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.dept-hero-content> :nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+.dept-hero-content h1 {
+  margin: 0.75rem 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.2vw, 3.25rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--hq-spruce);
+  text-wrap: balance;
+}
+
+.dept-hero-desc {
+  margin-bottom: 2rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--color-text-sub);
+}
+
+.dept-search-wrapper {
+  position: relative;
+  max-width: 28rem;
+  margin: 0 auto;
+  transition: transform 0.3s var(--hq-ease);
+}
+
+.dept-search-wrapper:focus-within {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.dept-search-icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  transition: color 0.2s;
+}
+
+.dept-search-wrapper:focus-within .dept-search-icon {
+  color: var(--hq-jade);
+}
+
+.dept-search-input {
+  height: 3.25rem;
+  padding-left: 2.9rem !important;
+  border-radius: 9999px !important;
+  border: 1px solid var(--color-border) !important;
+  background-color: #fff !important;
+  color: var(--hq-spruce) !important;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.dept-search-input::placeholder {
+  color: var(--color-text-muted) !important;
+}
+
+.dept-search-input:focus {
+  outline: none;
+  border-color: var(--hq-jade-soft) !important;
+  box-shadow: 0 0 0 4px rgba(26, 156, 122, 0.16), var(--shadow-card) !important;
+}
+
+.dept-grid-section {
+  padding: 4rem 1.5rem 5rem;
+  background: var(--hq-mist);
+}
+
+.dept-container {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.dept-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .dept-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .dept-cards-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.dept-cards-grid .dept-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.4s var(--hq-ease), box-shadow 0.4s var(--hq-ease), border-color 0.4s;
+}
+
+.dept-cards-grid .dept-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--hq-jade-soft), var(--hq-token));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--hq-ease);
+}
+
+.dept-card-icon-wrap {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-50);
+  color: var(--hq-jade);
+  font-size: 1.5rem;
+  transition: transform 0.4s var(--hq-ease), background-color 0.3s, color 0.3s;
+}
+
+@media (hover: hover) {
+  .dept-cards-grid .dept-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary-300);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .dept-cards-grid .dept-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .dept-cards-grid .dept-card:hover .dept-card-icon-wrap {
+    transform: scale(1.1) rotate(-6deg);
+    background: var(--hq-token);
+    color: var(--hq-spruce);
+  }
+}
+
+.dept-skeleton-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .dept-skeleton-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dept-skeleton-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.dept-skeleton-grid>* {
+  position: relative;
+  overflow: hidden;
+}
+
+.dept-skeleton-grid>*::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.75) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: dept-shimmer 1.4s infinite;
+}
+
+@keyframes dept-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dept-drift {
+  to {
+    transform: translate(-5rem, 3rem) scale(1.15);
+  }
+}
+
+@keyframes dept-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes dept-reveal {
+  from {
+    opacity: 0;
+    translate: 0 2.5rem;
+    scale: 0.97;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .dept-cards-grid>* {
+    animation: dept-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 5% entry 90%;
+  }
+
+  .dept-cards-grid> :nth-child(4n + 2) {
+    animation-range: entry 12% entry 100%;
+  }
+
+  .dept-cards-grid> :nth-child(4n + 3) {
+    animation-range: entry 18% entry 100%;
+  }
+
+  .dept-cards-grid> :nth-child(4n) {
+    animation-range: entry 24% entry 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .departments-page *,
+  .departments-page *::before,
+  .departments-page *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

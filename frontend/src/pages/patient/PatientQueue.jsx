@@ -1,101 +1,154 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import appointmentService from '../../services/appointmentService';
 import queueService from '../../services/queueService';
 import useWebSocket from '../../hooks/useWebSocket';
-import { formatTime, formatWaitingTime, isToday } from '../../utils/dateUtils';
+import { formatTime } from '../../utils/dateUtils';
+import toast from 'react-hot-toast';
 import {
-  MdAccessTime,
-  MdPeople,
-  MdCheckCircle,
-  MdHourglassTop,
   MdLocalHospital,
+  MdPeople,
+  MdHourglassTop,
+  MdCheckCircle,
+  MdPhoneCallback,
+  MdMedicalServices,
   MdRefresh,
   MdWifi,
   MdWifiOff,
+  MdAccessTime,
+  MdBusiness,
+  MdCalendarMonth,
 } from 'react-icons/md';
 import './PatientQueue.css';
+
+const STATUS_CONFIG = {
+  WAITING: {
+    label: 'Waiting',
+    color: '#D97706',
+    bg: '#FFFBEB',
+    border: '#FCD34D',
+    icon: MdHourglassTop,
+    message: null,
+  },
+  CALLED: {
+    label: 'Called — Please Proceed',
+    color: '#2563EB',
+    bg: '#EFF6FF',
+    border: '#93C5FD',
+    icon: MdPhoneCallback,
+    message: '🔔 Doctor has called you. Please proceed to the consultation room now.',
+  },
+  IN_CONSULTATION: {
+    label: 'In Consultation',
+    color: '#0D9488',
+    bg: '#F0FDFA',
+    border: '#5EEAD4',
+    icon: MdMedicalServices,
+    message: '🩺 Your consultation is in progress. Please wait for the doctor.',
+  },
+  COMPLETED: {
+    label: 'Consultation Completed',
+    color: '#16A34A',
+    bg: '#F0FDF4',
+    border: '#86EFAC',
+    icon: MdCheckCircle,
+    message: '✅ Your consultation is complete. Thank you for visiting us!',
+  },
+  SKIPPED: {
+    label: 'Skipped',
+    color: '#6B7280',
+    bg: '#F9FAFB',
+    border: '#D1D5DB',
+    icon: MdPeople,
+    message: '⚠️ You were skipped. Please contact the reception desk.',
+  },
+  NO_SHOW: {
+    label: 'Marked No-Show',
+    color: '#DC2626',
+    bg: '#FEF2F2',
+    border: '#FCA5A5',
+    icon: MdPeople,
+    message: '❌ You were marked as a no-show. Please contact reception to reschedule.',
+  },
+  CANCELLED: {
+    label: 'Cancelled',
+    color: '#6B7280',
+    bg: '#F9FAFB',
+    border: '#D1D5DB',
+    icon: MdPeople,
+    message: '⚠️ Queue entry was cancelled.',
+  },
+};
 
 export default function PatientQueue() {
   const { user } = useAuth();
   const [queueData, setQueueData] = useState(null);
-  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const prevStatusRef = useRef(null);
 
-  // Fetch initial data
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchQueue = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // First get the patient's appointments to find which doctor queue to watch
-      const aptRes = await appointmentService.getAll();
-      const allApts = aptRes.data.data || [];
-      setAppointments(allApts);
-
-      // Look for checked-in or in-queue appointments, or completed ones from today
-      const activeApt = allApts.find((apt) =>
-        ['CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION'].includes(apt.status) ||
-        (apt.status === 'COMPLETED' && apt.appointmentDate && isToday(apt.appointmentDate))
-      );
-
-      if (activeApt) {
-        // Try to get queue status
-        try {
-          const queueRes = await queueService.getByDoctor(activeApt.doctorId);
-          const queueEntries = queueRes.data.data || [];
-          const myEntry = queueEntries.find((q) => q.patientId === activeApt.patientId);
-
-          if (myEntry) {
-            const position = queueEntries
-              .filter((q) => q.status === 'WAITING' && q.queueNumber < myEntry.queueNumber)
-              .length + 1;
-
-            setQueueData({
-              ...myEntry,
-              position,
-              totalInQueue: queueEntries.filter((q) => q.status === 'WAITING').length,
-              doctorName: activeApt.doctorName,
-              departmentName: activeApt.departmentName,
-              appointmentTime: activeApt.startTime,
-            });
-          }
-        } catch {
-          // Queue not found — patient might not be checked in yet
-        }
-      }
+      const res = await queueService.getMyQueue();
+      const entry = res.data?.data;
+      setQueueData(entry || null);
+      prevStatusRef.current = entry?.status || null;
     } catch (err) {
-      setError('Failed to load queue status');
+      if (err.response?.status !== 404) {
+        setError('Unable to load your queue status.');
+      }
+      setQueueData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // WebSocket for live updates
+  useEffect(() => { fetchQueue(); }, []);
+
+  // WebSocket — subscribe to the doctor's queue topic once we know the doctorId
   const doctorId = queueData?.doctorId;
   const { data: wsData, connected } = useWebSocket(
     doctorId ? `/topic/queue/${doctorId}` : null,
     !!doctorId
   );
 
-  // Update queue data when WebSocket message arrives
+  // Handle live WS update — find our entry in the broadcast list
   useEffect(() => {
-    if (wsData && Array.isArray(wsData) && queueData) {
-      const myEntry = wsData.find((q) => q.patientId === queueData.patientId);
-      if (myEntry) {
-        const position = wsData
-          .filter((q) => q.status === 'WAITING' && q.queueNumber < myEntry.queueNumber)
-          .length + 1;
+    if (!wsData || !Array.isArray(wsData)) return;
 
-        setQueueData((prev) => ({
-          ...prev,
-          ...myEntry,
-          position,
-          totalInQueue: wsData.filter((q) => q.status === 'WAITING').length,
-        }));
+    const myEntry = wsData.find(
+      (q) => q.patientId === queueData?.patientId || q.id === queueData?.id
+    );
+    if (!myEntry) return;
+
+    const prevStatus = prevStatusRef.current;
+    const newStatus = myEntry.status;
+
+    setQueueData((prev) => ({ ...prev, ...myEntry }));
+    prevStatusRef.current = newStatus;
+
+    // Toast notifications on significant status changes
+    if (prevStatus !== newStatus) {
+      if (newStatus === 'CALLED') {
+        toast('🔔 Doctor has called you! Please proceed to the consultation room.', {
+          duration: 6000,
+          style: { background: '#1D4ED8', color: '#fff', fontWeight: '600' },
+        });
+      } else if (newStatus === 'IN_CONSULTATION') {
+        toast('🩺 Your consultation has started.', {
+          duration: 4000,
+          style: { background: '#0F766E', color: '#fff' },
+        });
+      } else if (newStatus === 'COMPLETED') {
+        toast.success('✅ Your consultation is complete!', { duration: 5000 });
+      } else if (newStatus === 'WAITING' && prevStatus) {
+        // Position moved up
+        const pos = myEntry.patientsAhead + 1;
+        toast(`You are now #${pos} in the queue.`, {
+          duration: 3000,
+          icon: '📋',
+        });
       }
     }
   }, [wsData]);
@@ -108,172 +161,157 @@ export default function PatientQueue() {
     );
   }
 
-  // No active queue entry
-  if (!queueData) {
-    const checkedInApt = appointments.find((apt) =>
-      ['CHECKED_IN', 'IN_QUEUE'].includes(apt.status)
-    );
-
-    return (
-      <div className="pat-queue-page">
-        <h1 className="pat-queue-title">Queue Status</h1>
-
-        <div className="pat-queue-empty-state">
-          <div className="pat-queue-empty-icon">
-            <MdPeople />
-          </div>
-          <h3 className="pat-queue-empty-title">
-            Not in Queue
-          </h3>
-          <p className="pat-queue-empty-desc">
-            You're not currently in any queue. Check in at the reception desk or through your appointment to join a queue.
-          </p>
-        </div>
-
-        {/* Pending appointments that can be checked in */}
-        {appointments.filter((a) => ['PENDING', 'CONFIRMED'].includes(a.status)).length > 0 && (
-          <div className="pat-queue-pending-card">
-            <div className="pat-queue-pending-header">
-              <h3 className="pat-queue-pending-title">Pending Appointments</h3>
-              <p className="pat-queue-pending-subtitle">
-                Visit the reception to check in for your appointment
-              </p>
-            </div>
-            <div className="pat-queue-pending-list">
-              {appointments
-                .filter((a) => ['PENDING', 'CONFIRMED'].includes(a.status))
-                .slice(0, 3)
-                .map((apt) => (
-                  <div key={apt.id} className="pat-queue-pending-item">
-                    <div className="pat-queue-pending-icon">
-                      <MdHourglassTop />
-                    </div>
-                    <div className="pat-queue-pending-info">
-                      <p className="pat-queue-pending-name">
-                        Dr. {apt.doctorName}
-                      </p>
-                      <p className="pat-queue-pending-time">
-                        {apt.startTime && formatTime(apt.startTime)}
-                      </p>
-                    </div>
-                    <span className="pat-queue-pending-badge">
-                      {apt.status}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Active queue — show position
-  const statusConfig = {
-    WAITING: { icon: MdHourglassTop, class: 'WAITING' },
-    CALLED: { icon: MdAccessTime, class: 'CALLED' },
-    IN_CONSULTATION: { icon: MdLocalHospital, class: 'IN_CONSULTATION' },
-    COMPLETED: { icon: MdCheckCircle, class: 'COMPLETED' },
-  };
-
-  const currentStatus = statusConfig[queueData.status] || statusConfig.WAITING;
-  const StatusIcon = currentStatus.icon;
+  const config = queueData ? (STATUS_CONFIG[queueData.status] || STATUS_CONFIG.WAITING) : null;
+  const StatusIcon = config?.icon || MdHourglassTop;
 
   return (
     <div className="pat-queue-page">
+      {/* Header */}
       <div className="pat-queue-header">
-        <h1 className="pat-queue-title">Queue Status</h1>
+        <div>
+          <h1 className="pat-queue-title">Queue Status</h1>
+          <p className="pat-queue-subtitle">Your real-time position in today's queue</p>
+        </div>
         <div className="pat-queue-actions">
-          {connected ? (
-            <span className="pat-queue-status-badge live">
-              <MdWifi />
-              Live
-            </span>
-          ) : (
-            <span className="pat-queue-status-badge offline">
-              <MdWifiOff />
-              Offline
-            </span>
+          {doctorId ? (
+            connected ? (
+              <span className="pat-queue-status-badge live"><MdWifi /> Live</span>
+            ) : (
+              <span className="pat-queue-status-badge offline"><MdWifiOff /> Reconnecting</span>
+            )
+          ) : null}
+          <button onClick={fetchQueue} className="pat-queue-refresh-btn" title="Refresh"><MdRefresh /></button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="pat-queue-error">{error}</div>
+      )}
+
+      {!queueData ? (
+        /* Empty state — not currently in queue */
+        <div className="pat-queue-empty-state">
+          <div className="pat-queue-empty-icon"><MdPeople /></div>
+          <h3 className="pat-queue-empty-title">Not In Queue Today</h3>
+          <p className="pat-queue-empty-desc">
+            You don't have an active queue entry for today. If you have an appointment, please
+            check in at the reception desk to receive a queue number.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Status alert banner for actionable statuses */}
+          {config?.message && (
+            <div
+              className="pat-queue-alert-banner"
+              style={{ background: config.bg, border: `1.5px solid ${config.border}`, color: config.color }}
+            >
+              {config.message}
+            </div>
           )}
-          <button
-            onClick={fetchData}
-            className="pat-queue-refresh-btn"
+
+          {/* Main position card */}
+          <div
+            className={`pat-queue-active-card ${queueData.status}`}
+            style={{ borderColor: config.border }}
           >
-            <MdRefresh />
-          </button>
-        </div>
-      </div>
+            <StatusIcon className="pat-queue-active-icon" style={{ color: config.color }} />
 
-      {/* Queue Position Card */}
-      <div className={`pat-queue-active-card ${currentStatus.class}`}>
-        <StatusIcon className="pat-queue-active-icon" />
+            {queueData.status === 'WAITING' && (
+              <>
+                <p className="pat-queue-active-label">Your Queue Position</p>
+                <p className="pat-queue-active-main" style={{ color: config.color }}>
+                  #{queueData.queueNumber}
+                </p>
+                <p className="pat-queue-active-desc">
+                  {queueData.patientsAhead === 0
+                    ? "You're next! Please stand by."
+                    : `${queueData.patientsAhead} patient${queueData.patientsAhead > 1 ? 's' : ''} ahead of you`}
+                </p>
+              </>
+            )}
 
-        {queueData.status === 'WAITING' ? (
-          <>
-            <p className="pat-queue-active-label">Your position in queue</p>
-            <p className="pat-queue-active-main">{queueData.position}</p>
-            <p className="pat-queue-active-desc">
-              {queueData.position === 1
-                ? "You're next!"
-                : `${queueData.position - 1} patient${queueData.position - 1 > 1 ? 's' : ''} ahead of you`}
-            </p>
-          </>
-        ) : queueData.status === 'CALLED' ? (
-          <>
-            <p className="pat-queue-active-title">You've Been Called!</p>
-            <p className="pat-queue-active-desc">Please proceed to the doctor's room</p>
-          </>
-        ) : queueData.status === 'IN_CONSULTATION' ? (
-          <>
-            <p className="pat-queue-active-title">In Consultation</p>
-            <p className="pat-queue-active-desc">With Dr. {queueData.doctorName}</p>
-          </>
-        ) : (
-          <>
-            <p className="pat-queue-active-title">Consultation Complete</p>
-            <p className="pat-queue-active-desc">Thank you for your visit</p>
-          </>
-        )}
-      </div>
+            {queueData.status === 'CALLED' && (
+              <>
+                <p className="pat-queue-active-label">It's Your Turn!</p>
+                <p className="pat-queue-active-main" style={{ color: config.color }}>NOW</p>
+                <p className="pat-queue-active-desc">Please proceed to the consultation room</p>
+              </>
+            )}
 
-      {/* Details Card */}
-      <div className="pat-queue-details-card">
-        <h3 className="pat-queue-details-title">Appointment Details</h3>
-        <div className="pat-queue-details-list">
-          <div className="pat-queue-details-row">
-            <span className="pat-queue-details-label">Doctor</span>
-            <span className="pat-queue-details-val">
-              Dr. {queueData.doctorName}
-            </span>
+            {queueData.status === 'IN_CONSULTATION' && (
+              <>
+                <p className="pat-queue-active-label">Consultation in Progress</p>
+                <p className="pat-queue-active-main" style={{ color: config.color }}>🩺</p>
+                <p className="pat-queue-active-desc">You are currently with the doctor</p>
+              </>
+            )}
+
+            {queueData.status === 'COMPLETED' && (
+              <>
+                <p className="pat-queue-active-label">Consultation Complete</p>
+                <p className="pat-queue-active-main" style={{ color: config.color }}>✓</p>
+                <p className="pat-queue-active-desc">Thank you for visiting SmartHospital</p>
+              </>
+            )}
+
+            {['SKIPPED', 'NO_SHOW', 'CANCELLED'].includes(queueData.status) && (
+              <>
+                <p className="pat-queue-active-label">Queue Status</p>
+                <p className="pat-queue-active-main" style={{ color: config.color, fontSize: '1.5rem' }}>
+                  {config.label}
+                </p>
+                <p className="pat-queue-active-desc">Please contact the reception desk</p>
+              </>
+            )}
           </div>
-          <div className="pat-queue-details-row">
-            <span className="pat-queue-details-label">Department</span>
-            <span className="pat-queue-details-val">
-              {queueData.departmentName || '—'}
-            </span>
-          </div>
-          <div className="pat-queue-details-row">
-            <span className="pat-queue-details-label">Queue Number</span>
-            <span className="pat-queue-details-val highlight-teal">#{queueData.queueNumber}</span>
-          </div>
-          {queueData.status === 'WAITING' && queueData.estimatedWaitingTime > 0 && (
-            <div className="pat-queue-details-row">
-              <span className="pat-queue-details-label">Estimated Wait</span>
-              <span className="pat-queue-details-val highlight-amber">
-                {formatWaitingTime(queueData.estimatedWaitingTime)}
-              </span>
+
+          {/* Details card */}
+          <div className="pat-queue-details-card">
+            <h3 className="pat-queue-details-title">Appointment Details</h3>
+            <div className="pat-queue-details-list">
+              {queueData.doctorName && (
+                <div className="pat-queue-details-row">
+                  <span className="pat-queue-details-label"><MdLocalHospital /> Doctor</span>
+                  <span className="pat-queue-details-val">Dr. {queueData.doctorName}</span>
+                </div>
+              )}
+              {queueData.departmentName && (
+                <div className="pat-queue-details-row">
+                  <span className="pat-queue-details-label"><MdBusiness /> Department</span>
+                  <span className="pat-queue-details-val">{queueData.departmentName}</span>
+                </div>
+              )}
+              <div className="pat-queue-details-row">
+                <span className="pat-queue-details-label"><MdCalendarMonth /> Scheduled</span>
+                <span className="pat-queue-details-val">
+                  {queueData.appointmentTime ? formatTime(queueData.appointmentTime) : '—'}
+                </span>
+              </div>
+              {queueData.checkInTime && (
+                <div className="pat-queue-details-row">
+                  <span className="pat-queue-details-label"><MdAccessTime /> Checked In</span>
+                  <span className="pat-queue-details-val">
+                    {formatTime(queueData.checkInTime.substring(11, 16))}
+                  </span>
+                </div>
+              )}
+              <div className="pat-queue-details-row">
+                <span className="pat-queue-details-label"><MdPeople /> Queue Token</span>
+                <span className="pat-queue-details-val highlight-teal">#{queueData.queueNumber}</span>
+              </div>
+              {queueData.status === 'WAITING' && (
+                <div className="pat-queue-details-row">
+                  <span className="pat-queue-details-label"><MdPeople /> Patients Ahead</span>
+                  <span className="pat-queue-details-val highlight-amber">
+                    {queueData.patientsAhead}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-          {queueData.appointmentTime && (
-            <div className="pat-queue-details-row">
-              <span className="pat-queue-details-label">Scheduled Time</span>
-              <span className="pat-queue-details-val">
-                {formatTime(queueData.appointmentTime)}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

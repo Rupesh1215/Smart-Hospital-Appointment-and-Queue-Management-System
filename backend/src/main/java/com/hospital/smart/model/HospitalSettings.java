@@ -78,4 +78,41 @@ public class HospitalSettings {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public String getHospitalName() { return hospitalName; }
+    public void setHospitalName(String hospitalName) { this.hospitalName = hospitalName; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public LocalTime getWorkingHoursStart() { return workingHoursStart; }
+    public void setWorkingHoursStart(LocalTime workingHoursStart) { this.workingHoursStart = workingHoursStart; }
+    public LocalTime getWorkingHoursEnd() { return workingHoursEnd; }
+    public void setWorkingHoursEnd(LocalTime workingHoursEnd) { this.workingHoursEnd = workingHoursEnd; }
+    public List<String> getWorkingDays() { return workingDays; }
+    public void setWorkingDays(List<String> workingDays) { this.workingDays = workingDays; }
+    public List<String> getHolidays() { return holidays; }
+    public void setHolidays(List<String> holidays) { this.holidays = holidays; }
+    public int getDefaultConsultationDuration() { return defaultConsultationDuration; }
+    public void setDefaultConsultationDuration(int defaultConsultationDuration) { this.defaultConsultationDuration = defaultConsultationDuration; }
+    public int getMaxAdvanceBookingDays() { return maxAdvanceBookingDays; }
+    public void setMaxAdvanceBookingDays(int maxAdvanceBookingDays) { this.maxAdvanceBookingDays = maxAdvanceBookingDays; }
+    public boolean isAllowPatientCancellation() { return allowPatientCancellation; }
+    public void setAllowPatientCancellation(boolean allowPatientCancellation) { this.allowPatientCancellation = allowPatientCancellation; }
+    public int getCancellationWindowHours() { return cancellationWindowHours; }
+    public void setCancellationWindowHours(int cancellationWindowHours) { this.cancellationWindowHours = cancellationWindowHours; }
+    public boolean isChatbotEnabled() { return chatbotEnabled; }
+    public void setChatbotEnabled(boolean chatbotEnabled) { this.chatbotEnabled = chatbotEnabled; }
+    public int getMaxPatientsPerSlot() { return maxPatientsPerSlot; }
+    public void setMaxPatientsPerSlot(int maxPatientsPerSlot) { this.maxPatientsPerSlot = maxPatientsPerSlot; }
+    public int getDefaultSlotDurationMinutes() { return defaultSlotDurationMinutes; }
+    public void setDefaultSlotDurationMinutes(int defaultSlotDurationMinutes) { this.defaultSlotDurationMinutes = defaultSlotDurationMinutes; }
+    public boolean isEmergencyQueueBypass() { return emergencyQueueBypass; }
+    public void setEmergencyQueueBypass(boolean emergencyQueueBypass) { this.emergencyQueueBypass = emergencyQueueBypass; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

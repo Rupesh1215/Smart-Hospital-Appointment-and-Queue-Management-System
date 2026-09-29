@@ -13,6 +13,7 @@ import {
   MdLocalHospital,
   MdPeople,
   MdPerson,
+  MdSmartToy,
 } from 'react-icons/md';
 import './PatientDashboard.css';
 
@@ -37,104 +38,107 @@ export default function PatientDashboard() {
   };
 
   const todayApts = appointments.filter((a) => a.appointmentDate && isToday(a.appointmentDate));
-  const upcomingApts = appointments.filter((a) => ['PENDING', 'CONFIRMED'].includes(a.status));
+  const upcomingApts = appointments.filter((a) => ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(a.status));
   const completedApts = appointments.filter((a) => a.status === 'COMPLETED');
 
   const stats = [
-    { label: 'Total', value: appointments.length, icon: MdCalendarMonth, color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Today', value: todayApts.length, icon: MdAccessTime, color: '#d97706', bg: '#fffbeb' },
-    { label: 'Upcoming', value: upcomingApts.length, icon: MdHourglassTop, color: '#7c3aed', bg: '#f5f3ff' },
-    { label: 'Completed', value: completedApts.length, icon: MdCheckCircle, color: '#16a34a', bg: '#f0fdf4' },
+    { label: 'Total Appointments', value: appointments.length, icon: MdCalendarMonth, colorClass: 'stat-blue' },
+    { label: 'Today\'s Visits', value: todayApts.length, icon: MdAccessTime, colorClass: 'stat-amber' },
+    { label: 'Upcoming', value: upcomingApts.length, icon: MdHourglassTop, colorClass: 'stat-indigo' },
+    { label: 'Completed', value: completedApts.length, icon: MdCheckCircle, colorClass: 'stat-emerald' },
   ];
 
   if (loading) {
     return (
-      <div className="pat-skeleton-container">
-        <div className="skeleton-box h-24" />
-        <div className="pat-stats-grid">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton-box h-24" />)}
+      <div className="space-y-6">
+        <div className="skeleton h-32" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24" />)}
         </div>
-        <div className="skeleton-box h-64" />
+        <div className="skeleton h-64" />
       </div>
     );
   }
 
   return (
     <div className="patient-dashboard">
-      {/* Welcome */}
-      <div className="pat-header">
-        <div>
-          <p className="pat-greeting">
-            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}
+      {/* Welcome Hero Card */}
+      <div className="pat-welcome-card">
+        <div className="pat-welcome-content">
+          <p className="pat-greeting-tag">
+            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},
           </p>
-          <h1 className="pat-welcome-title">
-            Welcome back, {user?.name?.split(' ')[0] || 'Patient'}
+          <h1 className="pat-welcome-name">
+            {user?.name || 'Patient'}
           </h1>
-          <p className="pat-welcome-subtitle">
+          <p className="pat-welcome-text">
             {todayApts.length > 0
-              ? `You have ${todayApts.length} appointment${todayApts.length > 1 ? 's' : ''} today`
-              : 'No appointments scheduled for today'}
+              ? `You have ${todayApts.length} appointment${todayApts.length > 1 ? 's' : ''} scheduled for today.`
+              : 'You have no consultations scheduled for today.'}
           </p>
         </div>
-        <Link to="/patient/doctors" className="pat-book-btn">
-          <MdAdd /> Book Appointment
+        <Link to="/patient/doctors" className="btn btn-emerald btn-md">
+          <MdAdd /> Book New Visit
         </Link>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="pat-stats-grid">
         {stats.map((stat, i) => (
           <div key={i} className="pat-stat-card">
-            <div className="pat-stat-icon-wrap" style={{ backgroundColor: stat.bg }}>
-              <stat.icon style={{ color: stat.color }} />
+            <div className={`pat-stat-icon ${stat.colorClass}`}>
+              <stat.icon />
             </div>
             <div>
               <p className="pat-stat-val">{stat.value}</p>
-              <p className="pat-stat-label">{stat.label}</p>
+              <p className="pat-stat-lbl">{stat.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Content Grid */}
+      {/* Main Section */}
       <div className="pat-main-grid">
-        {/* Upcoming */}
-        <div className="pat-card main-col">
+        {/* Appointments Column */}
+        <div className="card pat-main-col">
           <div className="pat-card-header">
             <div>
-              <h2 className="pat-card-title">Upcoming Appointments</h2>
-              <p className="pat-card-subtitle">Your next scheduled visits</p>
+              <h2 className="text-card-title">Upcoming Appointments</h2>
+              <p className="text-subtext">Active consultations and reservations</p>
             </div>
-            <Link to="/patient/appointments" className="pat-view-all">
+            <Link to="/patient/appointments" className="pat-header-link">
               View all <MdArrowForward />
             </Link>
           </div>
 
-          <div className="pat-list">
+          <div className="pat-appointments-list">
             {upcomingApts.length === 0 ? (
-              <div className="pat-empty-state">
-                <MdCalendarMonth />
-                <p>No upcoming appointments</p>
-                <Link to="/patient/doctors" className="pat-empty-link">
-                  Book your first appointment &rarr;
+              <div className="pat-empty-box">
+                <MdCalendarMonth className="pat-empty-icon" />
+                <p className="font-semibold text-main">No upcoming appointments</p>
+                <p className="text-xs text-sub mb-4">Book a consultation with our expert specialists.</p>
+                <Link to="/patient/doctors" className="btn btn-primary btn-sm">
+                  Find a Doctor &rarr;
                 </Link>
               </div>
             ) : (
               upcomingApts.slice(0, 5).map((apt) => (
-                <div key={apt.id} className="pat-list-item">
-                  <div className={`pat-status-bar ${apt.status.toLowerCase()}`} />
+                <div key={apt.id} className="pat-apt-row">
                   <div className="pat-doc-avatar">
                     <MdLocalHospital />
                   </div>
-                  <div className="pat-apt-details">
-                    <p className="pat-doc-name">Dr. {apt.doctorName || 'Unknown'}</p>
-                    <p className="pat-doc-dept">{apt.departmentName || 'General'}</p>
+                  <div className="pat-apt-info">
+                    <p className="pat-doc-title">Dr. {apt.doctorName || 'Consultant Doctor'}</p>
+                    <p className="text-xs text-sub">{apt.departmentName || 'General Medicine'}</p>
                   </div>
-                  <div className="pat-apt-time">
-                    <p className="pat-apt-date">{apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}</p>
-                    <p className="pat-apt-hour">{apt.startTime ? formatTime(apt.startTime) : '—'}</p>
+                  <div className="pat-apt-date-col">
+                    <p className="pat-date-txt">{apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}</p>
+                    <p className="text-xs text-muted">{apt.startTime ? formatTime(apt.startTime) : '—'}</p>
                   </div>
-                  <span className={`pat-status-badge ${apt.status.toLowerCase()}`}>
+                  <span className={`badge ${
+                    apt.status === 'CONFIRMED' ? 'badge-primary' :
+                    apt.status === 'IN_PROGRESS' ? 'badge-teal' : 'badge-warning'
+                  }`}>
                     {apt.status}
                   </span>
                 </div>
@@ -143,47 +147,27 @@ export default function PatientDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions & Recent Activity */}
+        {/* Quick Actions Column */}
         <div className="pat-side-col">
-          <div className="pat-side-card">
-            <h2 className="pat-side-title">Quick Actions</h2>
-            <div className="pat-actions-list">
+          <div className="card">
+            <h3 className="text-card-title mb-4">Quick Actions</h3>
+            <div className="pat-actions-grid">
               {[
-                { icon: MdLocalHospital, label: 'Find Doctors', path: '/patient/doctors', color: '#2563eb', bg: '#eff6ff' },
-                { icon: MdCalendarMonth, label: 'My Appointments', path: '/patient/appointments', color: '#7c3aed', bg: '#f5f3ff' },
-                { icon: MdPeople, label: 'Queue Status', path: '/patient/queue', color: '#d97706', bg: '#fffbeb' },
-                { icon: MdPerson, label: 'My Profile', path: '/patient/profile', color: '#475569', bg: '#f8fafc' },
-              ].map((action, i) => (
-                <Link key={i} to={action.path} className="pat-action-btn">
-                  <div className="pat-action-icon" style={{ backgroundColor: action.bg }}>
-                    <action.icon style={{ color: action.color }} />
+                { icon: MdLocalHospital, label: 'Book Doctor', path: '/patient/doctors', badge: 'Fast' },
+                { icon: MdPeople, label: 'Live Queue', path: '/patient/queue', badge: 'Realtime' },
+                { icon: MdCalendarMonth, label: 'My Appointments', path: '/patient/appointments' },
+                { icon: MdPerson, label: 'My Profile', path: '/patient/profile' },
+              ].map((action, idx) => (
+                <Link key={idx} to={action.path} className="pat-action-tile">
+                  <div className="pat-action-icon-wrap">
+                    <action.icon />
                   </div>
-                  <span className="pat-action-label">{action.label}</span>
-                  <MdArrowForward className="pat-action-arrow" />
+                  <div className="flex-1">
+                    <p className="pat-action-name">{action.label}</p>
+                  </div>
+                  <MdArrowForward className="text-muted text-sm" />
                 </Link>
               ))}
-            </div>
-          </div>
-
-          <div className="pat-side-card">
-            <h2 className="pat-side-title">Recent Activity</h2>
-            <div className="pat-activity-list">
-              {appointments.slice(0, 3).map((apt) => (
-                <div key={apt.id} className="pat-activity-item">
-                  <div className={`pat-activity-dot ${apt.status.toLowerCase()}`} />
-                  <div className="pat-activity-content">
-                    <p className="pat-activity-title">
-                      <span>Dr. {apt.doctorName}</span> &mdash; {apt.status?.replace(/_/g, ' ').toLowerCase()}
-                    </p>
-                    <p className="pat-activity-date">
-                      {apt.appointmentDate ? formatDate(apt.appointmentDate) : 'Date pending'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {appointments.length === 0 && (
-                <p className="pat-empty-state" style={{ padding: '0.5rem', margin: 0, fontSize: '0.75rem' }}>No recent activity</p>
-              )}
             </div>
           </div>
         </div>

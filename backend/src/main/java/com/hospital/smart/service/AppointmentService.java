@@ -9,7 +9,6 @@ import com.hospital.smart.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -24,7 +23,6 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
-    private final org.springframework.context.ApplicationContext applicationContext;
 
     /** Simple counter for appointment numbers. In production, use a database sequence. */
     private final AtomicLong counter = new AtomicLong(1);
@@ -32,13 +30,11 @@ public class AppointmentService {
     public AppointmentService(AppointmentRepository appointmentRepository,
                               DoctorRepository doctorRepository,
                               PatientRepository patientRepository,
-                              DepartmentRepository departmentRepository,
-                              org.springframework.context.ApplicationContext applicationContext) {
+                              DepartmentRepository departmentRepository) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
-        this.applicationContext = applicationContext;
     }
 
     /**
@@ -113,7 +109,7 @@ public class AppointmentService {
         // Generate appointment number
         String appointmentNumber = generateAppointmentNumber(request.getAppointmentDate());
 
-        // Create appointment
+        // Create appointment — always CONFIRMED so it's immediately visible across roles
         Appointment appointment = Appointment.builder()
                 .appointmentNumber(appointmentNumber)
                 .patientId(patientId)
@@ -122,7 +118,7 @@ public class AppointmentService {
                 .appointmentDate(request.getAppointmentDate())
                 .startTime(request.getStartTime())
                 .endTime(endTime)
-                .status(AppointmentStatus.PENDING)
+                .status(AppointmentStatus.CONFIRMED)
                 .bookingType(request.getBookingType())
                 .reason(request.getReason())
                 .notes(request.getNotes())
@@ -131,18 +127,6 @@ public class AppointmentService {
                 .build();
 
         appointment = appointmentRepository.save(appointment);
-        
-        // Auto check-in if the appointment is for today
-        if (appointment.getAppointmentDate().equals(LocalDate.now())) {
-            try {
-                QueueService queueService = applicationContext.getBean(QueueService.class);
-                queueService.checkIn(appointment.getId());
-                appointment = appointmentRepository.findById(appointment.getId()).orElse(appointment);
-            } catch (Exception e) {
-                System.err.println("Failed to auto check-in: " + e.getMessage());
-            }
-        }
-        
         return toResponse(appointment);
     }
 
@@ -177,10 +161,30 @@ public class AppointmentService {
     }
 
     /**
+     * Get all appointments for a doctor by the doctor's user ID.
+     * Used by the authenticated doctor endpoints so they don't need to supply doctorId.
+     */
+    public List<AppointmentDTO.Response> getByDoctorUserId(String userId) {
+        Doctor doctor = doctorRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "userId", userId));
+        return getByDoctor(doctor.getId());
+    }
+
+    /**
      * Get all appointments for a doctor on a specific date.
      */
     public List<AppointmentDTO.Response> getByDoctorAndDate(String doctorId, LocalDate date) {
         return appointmentRepository.findByDoctorIdAndAppointmentDate(doctorId, date)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all appointments for a patient on a specific date.
+     */
+    public List<AppointmentDTO.Response> getByPatientAndDate(String patientId, LocalDate date) {
+        return appointmentRepository.findByPatientIdAndAppointmentDate(patientId, date)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

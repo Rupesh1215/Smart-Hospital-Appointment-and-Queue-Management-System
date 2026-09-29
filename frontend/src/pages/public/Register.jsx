@@ -38,15 +38,17 @@ export default function Register() {
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = 'Please enter a valid email address';
+    }
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^[+]?[0-9]{10,15}$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number (10-15 digits)';
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone must be 10 digits';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -73,8 +75,15 @@ export default function Register() {
       toast.success(`Welcome, ${user.name}! Your account is ready.`);
       navigate('/patient/dashboard', { replace: true });
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed. Please try again.';
-      toast.error(message);
+      const apiData = error.response?.data;
+      if (apiData?.data && typeof apiData.data === 'object') {
+        // Map backend field-level validation errors
+        setErrors(apiData.data);
+        toast.error(apiData.message || 'Please fix the errors in the form.');
+      } else {
+        const message = apiData?.message || 'Registration failed. Please try again.';
+        toast.error(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -211,8 +220,8 @@ export default function Register() {
               <form onSubmit={handleSubmit} className="register-form" id="register-form">
                 {inputField('register-name', 'name', 'text', 'Full Name', 'John Doe', HiOutlineUser)}
                 {inputField('register-email', 'email', 'email', 'Email Address', 'you@example.com', HiOutlineMail)}
-                {inputField('register-phone', 'phone', 'tel', 'Phone (Optional)', '1234567890', HiOutlinePhone)}
-                {inputField('register-password', 'password', 'password', 'Password', 'Minimum 6 characters', HiOutlineLockClosed)}
+                {inputField('register-phone', 'phone', 'tel', 'Phone Number', '9876543210', HiOutlinePhone)}
+                {inputField('register-password', 'password', 'password', 'Password', 'Minimum 8 characters', HiOutlineLockClosed)}
 
                 {/* Role */}
                 <div className="form-group">

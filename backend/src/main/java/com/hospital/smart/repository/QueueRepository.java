@@ -25,4 +25,11 @@ public interface QueueRepository extends MongoRepository<Queue, String> {
 
     List<Queue> findByDoctorIdAndQueueDateAndStatusIn(
             String doctorId, LocalDate date, List<QueueStatus> statuses);
+
+    /** All queues for a specific date — used by admin monitoring */
+    List<Queue> findByQueueDate(LocalDate date);
+
+    /** Active queue entries for a patient (WAITING / CALLED / IN_CONSULTATION) */
+    List<Queue> findByPatientIdAndQueueDateAndStatusIn(
+            String patientId, LocalDate date, List<QueueStatus> statuses);
 }

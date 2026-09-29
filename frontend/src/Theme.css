@@ -1,0 +1,99 @@
+/* Theme.css — import ONCE, after your global stylesheet (index.css), so it overrides the old tokens.
+   Palette: Spruce (deep clinical green) · Jade (actions) · Mist (calm surfaces) · Token Amber (the queue-ticket accent) */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Figtree:wght@400..700&display=swap");
+
+:root {
+    --hq-spruce: #0B3330;
+    --hq-spruce-800: #124540;
+    --hq-spruce-950: #062421;
+    --hq-jade: #0B7A5F;
+    --hq-jade-soft: #1A9C7A;
+    --hq-mist: #F3FAF6;
+    --hq-token: #FFB627;
+    --hq-token-soft: #FFF3D6;
+    --hq-on-dark: #A9CBC1;
+    --hq-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    /* Existing token names, re-mapped so buttons and every page follow the new palette */
+    --color-primary-50: #EAF7F2;
+    --color-primary-100: #D0EFE3;
+    --color-primary-200: #A6E0CC;
+    --color-primary-300: #72CDB0;
+    --color-primary-400: #3DB693;
+    --color-primary-500: #1A9C7A;
+    --color-primary-600: #0B7A5F;
+    --color-primary-700: #09624D;
+    --color-primary-800: #084F3F;
+    --color-primary-900: #073D33;
+
+    --color-teal-50: #E9F8F8;
+    --color-teal-100: #C9EFEF;
+    --color-teal-300: #6FD3D3;
+    --color-teal-400: #38BDBD;
+    --color-teal-500: #1FA3A6;
+    --color-teal-600: #148587;
+    --color-teal-700: #106A6C;
+
+    --color-brand-navy-950: #062421;
+    --color-brand-navy-900: #0B3330;
+    --color-brand-navy-800: #124540;
+    --color-brand-navy-700: #1A5750;
+
+    --color-warning-50: #FFF6E0;
+    --color-warning-400: #FFB627;
+    --color-warning-600: #B87404;
+    --color-violet-50: #F4ECF8;
+    --color-violet-600: #7B4B94;
+    --color-indigo-50: #EAF3FB;
+    --color-indigo-600: #2B6CA3;
+    --color-success-50: #EAF7EC;
+    --color-success-600: #2F8F52;
+
+    --color-danger-50: #FDECE9;
+    --color-danger-100: #FAD3CD;
+    --color-danger-500: #E0574A;
+    --color-danger-600: #C0392B;
+    --color-text-muted: #7B958E;
+    --radius-sm: 0.5rem;
+
+    --color-text-main: #10302C;
+    --color-text-sub: #47635E;
+    --color-border: #D5E5DE;
+    --color-border-subtle: #E4EFE9;
+    --color-surface-elevated: #F3FAF6;
+    --color-surface-sunken: #E6F3EC;
+
+    --radius-xs: 0.375rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1.125rem;
+    --radius-xl: 1.75rem;
+    --radius-full: 999px;
+    --shadow-card: 0 1px 2px rgba(11, 51, 48, 0.05), 0 8px 24px -12px rgba(11, 51, 48, 0.16);
+    --shadow-card-hover: 0 2px 4px rgba(11, 51, 48, 0.06), 0 22px 40px -16px rgba(11, 51, 48, 0.28);
+    --shadow-dropdown: 0 24px 48px -16px rgba(11, 51, 48, 0.28);
+
+    --font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+    outline: 2px solid var(--hq-jade-soft);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}

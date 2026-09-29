@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import appointmentService from '../../services/appointmentService';
 import { formatDate, formatTime } from '../../utils/dateUtils';
 import toast from 'react-hot-toast';
-import { MdCalendarMonth, MdSearch, MdCheckCircle, MdCancel } from 'react-icons/md';
+import {
+  MdCalendarMonth, MdSearch, MdCheckCircle, MdCancel,
+  MdHowToReg, MdAdd, MdRefresh,
+} from 'react-icons/md';
 import './ReceptionistAppointments.css';
 
 export default function ReceptionistAppointments() {
@@ -12,6 +15,7 @@ export default function ReceptionistAppointments() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => { fetchAppointments(); }, []);
 
@@ -27,24 +31,34 @@ export default function ReceptionistAppointments() {
     }
   };
 
-  const handleConfirm = async (id) => {
+  const handleCheckIn = async (id) => {
+    setProcessingId(id);
     try {
-      await appointmentService.update(id, { status: 'CONFIRMED' });
-      toast.success('Appointment confirmed');
+      await appointmentService.checkIn(id);
+      toast.success('Patient checked in and added to queue');
       fetchAppointments();
-    } catch (err) { toast.error('Failed to confirm'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Already checked in or cannot check in now');
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleCancel = async (id) => {
-    if (!confirm('Cancel this appointment?')) return;
+    if (!window.confirm('Cancel this appointment?')) return;
+    setProcessingId(id);
     try {
-      await appointmentService.cancel(id);
+      await appointmentService.cancel(id, 'Cancelled by receptionist');
       toast.success('Appointment cancelled');
       fetchAppointments();
-    } catch (err) { toast.error('Failed to cancel'); }
+    } catch (err) {
+      toast.error('Failed to cancel');
+    } finally {
+      setProcessingId(null);
+    }
   };
 
-  const filters = ['ALL', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'COMPLETED', 'CANCELLED'];
+  const filters = ['ALL', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
 
   const filtered = appointments
     .filter((a) => filter === 'ALL' || a.status === filter)
@@ -54,7 +68,23 @@ export default function ReceptionistAppointments() {
       a.doctorName?.toLowerCase().includes(search.toLowerCase()) ||
       a.appointmentNumber?.toLowerCase().includes(search.toLowerCase())
     )
-    .sort((a, b) => new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`) - new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`));
+    .sort((a, b) => {
+      const da = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
+      const db = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
+      return db - da;
+    });
+
+  const statusBadgeClass = (status) => {
+    switch (status) {
+      case 'CONFIRMED': return 'rec-apt-badge confirmed';
+      case 'CHECKED_IN': return 'rec-apt-badge checked-in';
+      case 'IN_QUEUE': return 'rec-apt-badge in-queue';
+      case 'IN_CONSULTATION': return 'rec-apt-badge in-consultation';
+      case 'COMPLETED': return 'rec-apt-badge completed';
+      case 'CANCELLED': return 'rec-apt-badge cancelled';
+      default: return 'rec-apt-badge';
+    }
+  };
 
   if (loading) {
     return (
@@ -69,7 +99,15 @@ export default function ReceptionistAppointments() {
       <div className="rec-apt-header">
         <div>
           <h1 className="rec-apt-title">All Appointments</h1>
-          <p className="rec-apt-subtitle">View and manage all hospital appointments</p>
+          <p className="rec-apt-subtitle">View, manage, and check in patients for their appointments</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={fetchAppointments} className="rec-apt-btn secondary" title="Refresh">
+            <MdRefresh /> Refresh
+          </button>
+          <button onClick={() => navigate('/receptionist/book')} className="rec-apt-btn primary">
+            <MdAdd /> Book for Patient
+          </button>
         </div>
       </div>
 
@@ -77,7 +115,11 @@ export default function ReceptionistAppointments() {
         <div className="rec-apt-filters">
           <div className="rec-apt-search">
             <MdSearch />
-            <input placeholder="Search patient, doctor, or ID..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input
+              placeholder="Search patient, doctor, or ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div className="rec-apt-filter-pills">
             {filters.map((f) => (
@@ -103,6 +145,7 @@ export default function ReceptionistAppointments() {
             <table className="rec-apt-table">
               <thead>
                 <tr>
+                  <th>Appointment #</th>
                   <th>Patient</th>
                   <th>Doctor</th>
                   <th>Date</th>
@@ -112,29 +155,61 @@ export default function ReceptionistAppointments() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((apt) => (
-                  <tr key={apt.id}>
-                    <td>
-                      <p className="rec-apt-name">{apt.patientName || 'Patient'}</p>
-                      <p className="rec-apt-sub">{apt.appointmentNumber}</p>
-                    </td>
-                    <td>
-                      <p className="rec-apt-name">Dr. {apt.doctorName || 'Unknown'}</p>
-                      <p className="rec-apt-sub">{apt.departmentName || '—'}</p>
-                    </td>
-                    <td>{apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}</td>
-                    <td>{apt.startTime ? formatTime(apt.startTime) : '—'}</td>
-                    <td><span className={`rec-apt-badge ${apt.status}`}>{apt.status?.replace(/_/g, ' ')}</span></td>
-                    <td style={{ display: 'flex', gap: '0.375rem' }}>
-                      {apt.status === 'PENDING' && (
-                        <button onClick={() => handleConfirm(apt.id)} className="rec-apt-btn primary"><MdCheckCircle /> Confirm</button>
-                      )}
-                      {['PENDING', 'CONFIRMED'].includes(apt.status) && (
-                        <button onClick={() => handleCancel(apt.id)} className="rec-apt-btn danger"><MdCancel /> Cancel</button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((apt) => {
+                  const canCheckIn = ['PENDING', 'CONFIRMED'].includes(apt.status);
+                  const canCancel = ['PENDING', 'CONFIRMED'].includes(apt.status);
+                  const isProcessing = processingId === apt.id;
+
+                  return (
+                    <tr key={apt.id}>
+                      <td>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#64748b' }}>
+                          {apt.appointmentNumber || '—'}
+                        </span>
+                      </td>
+                      <td>
+                        <p className="rec-apt-name">{apt.patientName || 'Unknown Patient'}</p>
+                      </td>
+                      <td>
+                        <p className="rec-apt-name">Dr. {apt.doctorName || 'Unknown'}</p>
+                        <p className="rec-apt-sub">{apt.departmentName || '—'}</p>
+                      </td>
+                      <td>{apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}</td>
+                      <td>{apt.startTime ? formatTime(apt.startTime) : '—'}</td>
+                      <td>
+                        <span className={statusBadgeClass(apt.status)}>
+                          {apt.status?.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                        {canCheckIn && (
+                          <button
+                            onClick={() => handleCheckIn(apt.id)}
+                            disabled={isProcessing}
+                            className="rec-apt-btn checkin"
+                          >
+                            <MdHowToReg /> Check In
+                          </button>
+                        )}
+                        {canCancel && (
+                          <button
+                            onClick={() => handleCancel(apt.id)}
+                            disabled={isProcessing}
+                            className="rec-apt-btn danger"
+                          >
+                            <MdCancel /> Cancel
+                          </button>
+                        )}
+                        {apt.status === 'CHECKED_IN' && (
+                          <span style={{ fontSize: '0.75rem', color: '#14b8a6', fontWeight: 600, alignSelf: 'center' }}>In Queue</span>
+                        )}
+                        {apt.status === 'COMPLETED' && (
+                          <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, alignSelf: 'center' }}>Done</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

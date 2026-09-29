@@ -24,29 +24,41 @@ public class QueueService {
     private final AppointmentRepository appointmentRepository;
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
+    private final DepartmentRepository departmentRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     public QueueService(QueueRepository queueRepository,
                         AppointmentRepository appointmentRepository,
                         DoctorRepository doctorRepository,
                         PatientRepository patientRepository,
-                        SimpMessagingTemplate messagingTemplate) {
+                        DepartmentRepository departmentRepository,
+                        SimpMessagingTemplate messagingTemplate,
+                        AuditLogService auditLogService,
+                        NotificationService notificationService) {
         this.queueRepository = queueRepository;
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
+        this.departmentRepository = departmentRepository;
         this.messagingTemplate = messagingTemplate;
+        this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
-    /**
-     * Check in a patient — creates a queue entry for their appointment.
-     */
-    public QueueDTO.Response checkIn(String appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Appointment", "id", appointmentId));
+    // ─────────────────────────────────────────────────────────────────────────
+    // STATE TRANSITIONS
+    // ─────────────────────────────────────────────────────────────────────────
 
-        // Validate appointment status
+    /**
+     * Receptionist checks in a patient — creates a queue entry.
+     */
+    public QueueDTO.Response checkIn(String appointmentId, String performingUserId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment", "id", appointmentId));
+
+        // Validate appointment status allows check-in
         if (appointment.getStatus() != AppointmentStatus.PENDING &&
                 appointment.getStatus() != AppointmentStatus.CONFIRMED) {
             throw new SlotUnavailableException(
@@ -54,31 +66,31 @@ public class QueueService {
                             + appointment.getStatus());
         }
 
-        // Check if already checked in
+        // Prevent double check-in
         Optional<Queue> existingQueue = queueRepository.findByAppointmentId(appointmentId);
         if (existingQueue.isPresent()) {
             throw new SlotUnavailableException("Patient is already checked in for this appointment.");
         }
 
-        // Get next queue number for this doctor today
+        // Next queue number for this doctor today
         long count = queueRepository.countByDoctorIdAndQueueDate(
                 appointment.getDoctorId(), appointment.getAppointmentDate());
         int nextNumber = (int) count + 1;
 
-        // Calculate estimated waiting time
+        // Estimated waiting time
         Doctor doctor = doctorRepository.findById(appointment.getDoctorId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Doctor", "id", appointment.getDoctorId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "id", appointment.getDoctorId()));
 
-        int waitingPatientsAhead = getWaitingCount(appointment.getDoctorId(),
-                appointment.getAppointmentDate());
-        int estimatedWait = waitingPatientsAhead * doctor.getAverageConsultationTime();
+        int waitingAhead = getWaitingCount(appointment.getDoctorId(), appointment.getAppointmentDate());
+        int estimatedWait = waitingAhead * doctor.getAverageConsultationTime();
 
-        // Create queue entry
+        // Build queue entry — snapshot departmentId and appointmentTime
         Queue queue = Queue.builder()
                 .appointmentId(appointmentId)
                 .doctorId(appointment.getDoctorId())
                 .patientId(appointment.getPatientId())
+                .departmentId(appointment.getDepartmentId())
+                .appointmentTime(appointment.getStartTime())
                 .queueDate(appointment.getAppointmentDate())
                 .queueNumber(nextNumber)
                 .status(QueueStatus.WAITING)
@@ -88,21 +100,36 @@ public class QueueService {
 
         queue = queueRepository.save(queue);
 
-        // Update appointment status
+        // Update appointment
         appointment.setStatus(AppointmentStatus.CHECKED_IN);
         appointmentRepository.save(appointment);
 
-        // Broadcast queue update
+        // Audit log
+        String patientName = patientRepository.findById(appointment.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "QUEUE_CHECK_IN", "Queue", queue.getId(),
+                "Checked in patient " + patientName + " — Queue #" + nextNumber);
+
+        // Broadcast
         broadcastQueueUpdate(appointment.getDoctorId(), appointment.getAppointmentDate());
+        broadcastGlobalUpdate(appointment.getAppointmentDate());
 
         return toResponse(queue);
     }
 
     /**
-     * Call the next patient in the queue.
+     * Doctor calls the next waiting patient.
      */
-    public QueueDTO.Response callNext(String doctorId) {
+    public QueueDTO.Response callNext(String doctorId, String performingUserId) {
         LocalDate today = LocalDate.now();
+
+        // Must not have a CALLED or IN_CONSULTATION patient already
+        List<Queue> already = queueRepository.findByDoctorIdAndQueueDateAndStatusIn(
+                doctorId, today, Arrays.asList(QueueStatus.CALLED, QueueStatus.IN_CONSULTATION));
+        if (!already.isEmpty()) {
+            throw new SlotUnavailableException(
+                    "There is already a patient being attended to. Complete or skip them first.");
+        }
 
         List<Queue> waiting = queueRepository.findByDoctorIdAndQueueDateAndStatus(
                 doctorId, today, QueueStatus.WAITING);
@@ -111,7 +138,6 @@ public class QueueService {
             throw new ResourceNotFoundException("Queue", "status", "No waiting patients");
         }
 
-        // Get the first waiting patient (lowest queue number)
         Queue next = waiting.stream()
                 .min((a, b) -> Integer.compare(a.getQueueNumber(), b.getQueueNumber()))
                 .get();
@@ -120,109 +146,172 @@ public class QueueService {
         next.setCalledTime(LocalDateTime.now());
         next = queueRepository.save(next);
 
-        // Update appointment status
-        Appointment appointment = appointmentRepository.findById(next.getAppointmentId())
-                .orElse(null);
+        // Update appointment
+        Appointment appointment = appointmentRepository.findById(next.getAppointmentId()).orElse(null);
         if (appointment != null) {
             appointment.setStatus(AppointmentStatus.IN_QUEUE);
             appointmentRepository.save(appointment);
         }
 
-        // Recalculate waiting times for remaining patients
-        recalculateWaitingTimes(doctorId, today);
+        // Audit
+        String patientName = patientRepository.findById(next.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "QUEUE_CALLED", "Queue", next.getId(),
+                "Called patient " + patientName + " (Queue #" + next.getQueueNumber() + ")");
 
-        // Broadcast queue update
+        // Notify patient
+        notifyPatient(next, "Your turn is now!", "Doctor has called you. Please proceed to the consultation room.");
+
+        recalculateWaitingTimes(doctorId, today);
         broadcastQueueUpdate(doctorId, today);
+        broadcastGlobalUpdate(today);
 
         return toResponse(next);
     }
 
     /**
-     * Start consultation — moves patient from CALLED to IN_CONSULTATION.
+     * Doctor starts consultation (CALLED → IN_CONSULTATION).
      */
-    public QueueDTO.Response startConsultation(String queueId) {
+    public QueueDTO.Response startConsultation(String queueId, String performingUserId) {
         Queue queue = queueRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue", "id", queueId));
 
         if (queue.getStatus() != QueueStatus.CALLED) {
-            throw new SlotUnavailableException(
-                    "Patient must be CALLED before starting consultation.");
+            throw new SlotUnavailableException("Patient must be in CALLED state to start consultation. Current: " + queue.getStatus());
         }
 
         queue.setStatus(QueueStatus.IN_CONSULTATION);
         queue.setConsultationStartTime(LocalDateTime.now());
         queue = queueRepository.save(queue);
 
-        // Update appointment status
-        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId())
-                .orElse(null);
+        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId()).orElse(null);
         if (appointment != null) {
             appointment.setStatus(AppointmentStatus.IN_CONSULTATION);
             appointmentRepository.save(appointment);
         }
 
+        String patientName = patientRepository.findById(queue.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "CONSULTATION_STARTED", "Queue", queue.getId(),
+                "Started consultation with " + patientName);
+
+        notifyPatient(queue, "Consultation Started", "Your consultation has started. You are currently with the doctor.");
+
         broadcastQueueUpdate(queue.getDoctorId(), queue.getQueueDate());
+        broadcastGlobalUpdate(queue.getQueueDate());
 
         return toResponse(queue);
     }
 
     /**
-     * Complete consultation — finishes the current patient.
+     * Doctor completes the consultation (IN_CONSULTATION → COMPLETED).
      */
-    public QueueDTO.Response completeConsultation(String queueId) {
+    public QueueDTO.Response completeConsultation(String queueId, String performingUserId) {
         Queue queue = queueRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue", "id", queueId));
 
         if (queue.getStatus() != QueueStatus.IN_CONSULTATION) {
-            throw new SlotUnavailableException(
-                    "Patient must be IN_CONSULTATION to complete.");
+            throw new SlotUnavailableException("Patient must be IN_CONSULTATION to complete. Current: " + queue.getStatus());
         }
 
         queue.setStatus(QueueStatus.COMPLETED);
         queue.setConsultationEndTime(LocalDateTime.now());
         queue = queueRepository.save(queue);
 
-        // Update appointment status
-        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId())
-                .orElse(null);
+        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId()).orElse(null);
         if (appointment != null) {
             appointment.setStatus(AppointmentStatus.COMPLETED);
             appointmentRepository.save(appointment);
         }
 
-        // Recalculate for remaining
+        String patientName = patientRepository.findById(queue.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "CONSULTATION_COMPLETED", "Queue", queue.getId(),
+                "Completed consultation with " + patientName);
+
+        notifyPatient(queue, "Consultation Completed", "Your appointment has been completed. Thank you for visiting us.");
+
         recalculateWaitingTimes(queue.getDoctorId(), queue.getQueueDate());
         broadcastQueueUpdate(queue.getDoctorId(), queue.getQueueDate());
+        broadcastGlobalUpdate(queue.getQueueDate());
 
         return toResponse(queue);
     }
 
     /**
-     * Skip a patient in the queue.
+     * Skip a patient (WAITING → SKIPPED). Doctor or authorised Receptionist.
      */
-    public QueueDTO.Response skip(String queueId) {
+    public QueueDTO.Response skip(String queueId, String performingUserId) {
         Queue queue = queueRepository.findById(queueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Queue", "id", queueId));
+
+        if (queue.getStatus() != QueueStatus.WAITING && queue.getStatus() != QueueStatus.CALLED) {
+            throw new SlotUnavailableException("Cannot skip a patient in state: " + queue.getStatus());
+        }
 
         queue.setStatus(QueueStatus.SKIPPED);
         queue = queueRepository.save(queue);
 
-        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId())
-                .orElse(null);
+        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId()).orElse(null);
         if (appointment != null) {
             appointment.setStatus(AppointmentStatus.NO_SHOW);
             appointmentRepository.save(appointment);
         }
 
+        String patientName = patientRepository.findById(queue.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "QUEUE_SKIPPED", "Queue", queue.getId(),
+                "Skipped patient " + patientName + " (Queue #" + queue.getQueueNumber() + ")");
+
+        notifyPatient(queue, "Queue Update", "You were skipped in the queue. Please contact the reception desk.");
+
         recalculateWaitingTimes(queue.getDoctorId(), queue.getQueueDate());
         broadcastQueueUpdate(queue.getDoctorId(), queue.getQueueDate());
+        broadcastGlobalUpdate(queue.getQueueDate());
 
         return toResponse(queue);
     }
 
     /**
-     * Get the queue for a doctor on a given date.
+     * Mark a patient as no-show (WAITING or CALLED → NO_SHOW).
      */
+    public QueueDTO.Response noShow(String queueId, String performingUserId) {
+        Queue queue = queueRepository.findById(queueId)
+                .orElseThrow(() -> new ResourceNotFoundException("Queue", "id", queueId));
+
+        if (queue.getStatus() != QueueStatus.WAITING && queue.getStatus() != QueueStatus.CALLED) {
+            throw new SlotUnavailableException("Cannot mark as NO_SHOW from state: " + queue.getStatus());
+        }
+
+        queue.setStatus(QueueStatus.NO_SHOW);
+        queue = queueRepository.save(queue);
+
+        Appointment appointment = appointmentRepository.findById(queue.getAppointmentId()).orElse(null);
+        if (appointment != null) {
+            appointment.setStatus(AppointmentStatus.NO_SHOW);
+            appointmentRepository.save(appointment);
+        }
+
+        String patientName = patientRepository.findById(queue.getPatientId())
+                .map(Patient::getPatientName).orElse("Unknown");
+        auditLogService.log(performingUserId, "QUEUE_NO_SHOW", "Queue", queue.getId(),
+                "Marked " + patientName + " as No-Show (Queue #" + queue.getQueueNumber() + ")");
+
+        notifyPatient(queue, "Appointment Marked No-Show",
+                "You have been marked as a no-show. Please contact reception to reschedule.");
+
+        recalculateWaitingTimes(queue.getDoctorId(), queue.getQueueDate());
+        broadcastQueueUpdate(queue.getDoctorId(), queue.getQueueDate());
+        broadcastGlobalUpdate(queue.getQueueDate());
+
+        return toResponse(queue);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // QUERIES
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Get the full queue for a doctor on a given date. */
     public List<QueueDTO.Response> getByDoctor(String doctorId, LocalDate date) {
         return queueRepository.findByDoctorIdAndQueueDateOrderByQueueNumberAsc(doctorId, date)
                 .stream()
@@ -230,43 +319,52 @@ public class QueueService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Get the queue for a doctor today.
-     */
+    /** Get today's queue for a doctor. */
     public List<QueueDTO.Response> getByDoctorToday(String doctorId) {
         return getByDoctor(doctorId, LocalDate.now());
     }
 
-    /**
-     * Get queue entry for a patient on a given date.
-     */
+    /** Get queue entry for a patient on a given date. */
     public QueueDTO.Response getByPatient(String patientId, LocalDate date) {
         Queue queue = queueRepository.findByPatientIdAndQueueDate(patientId, date)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Queue", "patientId", patientId));
+                .orElseThrow(() -> new ResourceNotFoundException("Queue", "patientId", patientId));
         return toResponse(queue);
     }
 
     /**
-     * Get queue position for a patient — how many people are ahead.
+     * Get the active queue entry for a patient today (WAITING / CALLED / IN_CONSULTATION).
+     * Returns null if not currently in an active queue.
      */
-    public int getPatientPosition(String patientId, LocalDate date) {
-        Queue patientQueue = queueRepository.findByPatientIdAndQueueDate(patientId, date)
-                .orElse(null);
-
-        if (patientQueue == null || patientQueue.getStatus() != QueueStatus.WAITING) {
-            return -1;
+    public QueueDTO.Response getActiveByPatient(String patientId) {
+        List<QueueStatus> activeStatuses = Arrays.asList(
+                QueueStatus.WAITING, QueueStatus.CALLED, QueueStatus.IN_CONSULTATION);
+        List<Queue> active = queueRepository.findByPatientIdAndQueueDateAndStatusIn(
+                patientId, LocalDate.now(), activeStatuses);
+        if (active.isEmpty()) {
+            // Fall back to any entry today (could be COMPLETED)
+            return queueRepository.findByPatientIdAndQueueDate(patientId, LocalDate.now())
+                    .map(this::toResponse)
+                    .orElse(null);
         }
-
-        List<Queue> allWaiting = queueRepository.findByDoctorIdAndQueueDateAndStatus(
-                patientQueue.getDoctorId(), date, QueueStatus.WAITING);
-
-        return (int) allWaiting.stream()
-                .filter(q -> q.getQueueNumber() < patientQueue.getQueueNumber())
-                .count() + 1;
+        return toResponse(active.get(0));
     }
 
-    // --- Helpers ---
+    /** Get all queues for today — admin monitoring. */
+    public List<QueueDTO.Response> getAllByDate(LocalDate date) {
+        return queueRepository.findByQueueDate(date)
+                .stream()
+                .sorted((a, b) -> {
+                    int cmp = a.getDoctorId().compareTo(b.getDoctorId());
+                    if (cmp != 0) return cmp;
+                    return Integer.compare(a.getQueueNumber(), b.getQueueNumber());
+                })
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
 
     private int getWaitingCount(String doctorId, LocalDate date) {
         List<QueueStatus> activeStatuses = Arrays.asList(
@@ -281,8 +379,6 @@ public class QueueService {
 
         List<Queue> waitingList = queueRepository.findByDoctorIdAndQueueDateAndStatus(
                 doctorId, date, QueueStatus.WAITING);
-
-        // Sort by queue number
         waitingList.sort((a, b) -> Integer.compare(a.getQueueNumber(), b.getQueueNumber()));
 
         for (int i = 0; i < waitingList.size(); i++) {
@@ -293,7 +389,7 @@ public class QueueService {
     }
 
     /**
-     * Broadcast queue update to WebSocket subscribers.
+     * Broadcast queue update to all subscribers of a specific doctor's topic.
      * Clients subscribe to /topic/queue/{doctorId}
      */
     private void broadcastQueueUpdate(String doctorId, LocalDate date) {
@@ -301,6 +397,37 @@ public class QueueService {
         messagingTemplate.convertAndSend("/topic/queue/" + doctorId, queueList);
     }
 
+    /**
+     * Broadcast all queues for a date to the admin global topic.
+     * Clients subscribe to /topic/queue/all
+     */
+    private void broadcastGlobalUpdate(LocalDate date) {
+        try {
+            List<QueueDTO.Response> all = getAllByDate(date);
+            messagingTemplate.convertAndSend("/topic/queue/all", all);
+        } catch (Exception ignored) {
+            // Global broadcast is best-effort
+        }
+    }
+
+    /**
+     * Send in-app WebSocket notification to the patient based on their userId.
+     */
+    private void notifyPatient(Queue queue, String title, String message) {
+        try {
+            // Look up the patient's userId for notification routing
+            patientRepository.findById(queue.getPatientId()).ifPresent(patient -> {
+                notificationService.sendNotification(
+                        patient.getUserId(), title, message, "QUEUE", queue.getId());
+            });
+        } catch (Exception ignored) {
+            // Notifications must never break the main queue flow
+        }
+    }
+
+    /**
+     * Build a QueueDTO.Response with all enriched fields.
+     */
     private QueueDTO.Response toResponse(Queue queue) {
         String doctorName = doctorRepository.findById(queue.getDoctorId())
                 .map(Doctor::getDoctorName)
@@ -310,6 +437,23 @@ public class QueueService {
                 .map(Patient::getPatientName)
                 .orElse(null);
 
+        String departmentName = null;
+        if (queue.getDepartmentId() != null && !queue.getDepartmentId().isEmpty()) {
+            departmentName = departmentRepository.findById(queue.getDepartmentId())
+                    .map(Department::getName)
+                    .orElse(null);
+        }
+
+        // Calculate patientsAhead: number of WAITING entries with lower queue number
+        int patientsAhead = 0;
+        if (queue.getStatus() == QueueStatus.WAITING) {
+            List<Queue> allWaiting = queueRepository.findByDoctorIdAndQueueDateAndStatus(
+                    queue.getDoctorId(), queue.getQueueDate(), QueueStatus.WAITING);
+            patientsAhead = (int) allWaiting.stream()
+                    .filter(q -> q.getQueueNumber() < queue.getQueueNumber())
+                    .count();
+        }
+
         return QueueDTO.Response.builder()
                 .id(queue.getId())
                 .appointmentId(queue.getAppointmentId())
@@ -317,10 +461,15 @@ public class QueueService {
                 .doctorName(doctorName)
                 .patientId(queue.getPatientId())
                 .patientName(patientName)
+                .departmentId(queue.getDepartmentId())
+                .departmentName(departmentName)
                 .queueDate(queue.getQueueDate())
+                .appointmentTime(queue.getAppointmentTime() != null
+                        ? queue.getAppointmentTime().toString() : null)
                 .queueNumber(queue.getQueueNumber())
                 .status(queue.getStatus().name())
                 .estimatedWaitingTime(queue.getEstimatedWaitingTime())
+                .patientsAhead(patientsAhead)
                 .checkInTime(queue.getCheckInTime() != null
                         ? queue.getCheckInTime().toString() : null)
                 .calledTime(queue.getCalledTime() != null

@@ -8,7 +8,6 @@ import {
   MdSpeed,
   MdNotifications,
   MdArrowForward,
-  MdStar,
   MdCheckCircle,
   MdLocalHospital,
   MdFavorite,
@@ -27,88 +26,84 @@ import './Home.css';
 const features = [
   {
     icon: MdCalendarMonth,
-    title: 'Smart Scheduling',
-    description: 'AI-powered appointment booking that finds the perfect slot based on doctor availability and your preferences.',
-    iconClass: 'icon-primary-emerald',
+    title: 'Smart Slot Booking',
+    description: 'Instantly view available doctor time slots and schedule appointments with intelligent slot conflict detection.',
+    iconClass: 'icon-blue',
   },
   {
     icon: MdPeople,
-    title: 'Live Queue Tracking',
-    description: 'Real-time queue position updates with accurate waiting time estimates. No more guessing.',
-    iconClass: 'icon-blue-indigo',
+    title: 'Live Queue Status',
+    description: 'Track your exact position in the live queue in real-time with estimated consultation wait times.',
+    iconClass: 'icon-teal',
   },
   {
     icon: MdSmartToy,
-    title: 'AI Assistant',
-    description: 'Chat with our intelligent assistant to find doctors, book appointments, and get instant answers.',
-    iconClass: 'icon-violet-purple',
+    title: 'AI Health Assistant',
+    description: 'Interactive AI assistant to find doctors, explore departments, and answer booking queries instantly.',
+    iconClass: 'icon-violet',
   },
   {
     icon: MdSpeed,
-    title: 'Zero Wait Time',
-    description: 'Dynamic queue management minimizes patient waiting through intelligent scheduling algorithms.',
-    iconClass: 'icon-orange-red',
+    title: 'Instant Reception Check-In',
+    description: 'Smooth digital check-in workflow for receptionists and patients to eliminate long waiting lines.',
+    iconClass: 'icon-amber',
   },
   {
     icon: MdSecurity,
-    title: 'Secure & Private',
-    description: 'Enterprise-grade security with encrypted data, role-based access, and complete audit trails.',
-    iconClass: 'icon-cyan-blue',
+    title: 'Role-Based Access Control',
+    description: 'Tailored interfaces and strict security for Patients, Doctors, Receptionists, and Administrators.',
+    iconClass: 'icon-indigo',
   },
   {
     icon: MdNotifications,
-    title: 'Smart Reminders',
-    description: 'Automated appointment reminders and queue notifications keep you informed at every step.',
-    iconClass: 'icon-amber-orange',
+    title: 'Real-Time Notifications',
+    description: 'Receive instant status updates when your turn is called or when appointment status changes.',
+    iconClass: 'icon-emerald',
   },
 ];
 
 const steps = [
-  { number: '01', title: 'Search Doctor', description: 'Find specialists by department, name, or availability.' },
-  { number: '02', title: 'Choose a Slot', description: 'Pick from AI-recommended available time slots.' },
-  { number: '03', title: 'Confirm Booking', description: 'Review details and confirm your appointment instantly.' },
-  { number: '04', title: 'Track Queue', description: 'Monitor your real-time position and estimated wait time.' },
-  { number: '05', title: 'Meet Doctor', description: 'Get notified when it\'s your turn. No more endless waiting.' },
+  { number: '01', title: 'Find Doctor', description: 'Browse by specialty, department, or doctor availability.' },
+  { number: '02', title: 'Select Time Slot', description: 'Choose your preferred date and time from active schedules.' },
+  { number: '03', title: 'Confirm Booking', description: 'Receive your unique appointment number and digital token.' },
+  { number: '04', title: 'Check In & Track', description: 'Check in upon arrival and monitor your live queue position.' },
+  { number: '05', title: 'Consultation', description: 'Get called directly by your doctor when your turn arrives.' },
 ];
 
 const departments = [
-  { name: 'Cardiology', icon: MdFavorite, colorClass: 'dept-rose', doctors: 3 },
-  { name: 'Neurology', icon: MdPsychology, colorClass: 'dept-violet', doctors: 2 },
-  { name: 'Orthopedics', icon: MdHealthAndSafety, colorClass: 'dept-blue', doctors: 2 },
-  { name: 'Dermatology', icon: MdScience, colorClass: 'dept-emerald', doctors: 1 },
-  { name: 'General Medicine', icon: MdMedicalServices, colorClass: 'dept-primary', doctors: 4 },
-  { name: 'Pediatrics', icon: MdChildCare, colorClass: 'dept-amber', doctors: 2 },
-  { name: 'ENT', icon: MdHearing, colorClass: 'dept-indigo', doctors: 1 },
-  { name: 'Ophthalmology', icon: MdVisibility, colorClass: 'dept-cyan', doctors: 1 },
+  { name: 'Cardiology', icon: MdFavorite, colorClass: 'dept-rose' },
+  { name: 'Neurology', icon: MdPsychology, colorClass: 'dept-violet' },
+  { name: 'Orthopedics', icon: MdHealthAndSafety, colorClass: 'dept-blue' },
+  { name: 'Dermatology', icon: MdScience, colorClass: 'dept-emerald' },
+  { name: 'General Medicine', icon: MdMedicalServices, colorClass: 'dept-teal' },
+  { name: 'Pediatrics', icon: MdChildCare, colorClass: 'dept-amber' },
+  { name: 'ENT', icon: MdHearing, colorClass: 'dept-indigo' },
+  { name: 'Ophthalmology', icon: MdVisibility, colorClass: 'dept-cyan' },
 ];
 
 const stats = [
-  { value: '10,000+', label: 'Patients Served', icon: MdPeople },
-  { value: '50+', label: 'Expert Doctors', icon: MdLocalHospital },
-  { value: '98%', label: 'Satisfaction Rate', icon: MdStar },
-  { value: '<15 min', label: 'Avg Wait Time', icon: MdSpeed },
+  { value: '8+', label: 'Specialized Departments', icon: MdLocalHospital },
+  { value: 'Real-Time', label: 'Live Queue Tracking', icon: MdSpeed },
+  { value: '24/7', label: 'AI Assistant Support', icon: MdSmartToy },
+  { value: '100%', label: 'Digital Check-In', icon: MdCheckCircle },
 ];
 
 const faqs = [
   {
     q: 'How do I book an appointment?',
-    a: 'Register or log in, search for a doctor or department, select an available slot, and confirm your booking. You can also use our AI assistant for guided booking.',
+    a: 'Simply register or log in as a patient, select your desired doctor or department, choose an available time slot, and confirm your booking.',
   },
   {
-    q: 'Can I cancel or reschedule my appointment?',
-    a: 'Yes. You can cancel or reschedule from your dashboard anytime before your appointment. Cancelled slots become available for other patients.',
+    q: 'How does live queue tracking work?',
+    a: 'Once checked in by the receptionist or self check-in, your token appears on the live queue monitor. WebSocket technology updates your position automatically as consultations progress.',
   },
   {
-    q: 'How does the queue tracking work?',
-    a: 'After checking in, you get a real-time queue position with estimated waiting time. The system updates dynamically as consultations progress.',
+    q: 'Can doctors manage their consultations online?',
+    a: 'Yes, doctors have a dedicated dashboard to call the next patient, review patient reasons, submit clinical diagnoses, write prescriptions, and complete consultations.',
   },
   {
-    q: 'Is the AI chatbot available 24/7?',
-    a: 'Yes, the AI assistant is available around the clock to help you find doctors, check availability, and manage appointments.',
-  },
-  {
-    q: 'How are emergency cases handled?',
-    a: 'Emergency and urgent cases are prioritized by authorized hospital staff. The system supports priority-based queue management.',
+    q: 'What role does the AI Assistant play?',
+    a: 'Our AI assistant helps you navigate doctors, check schedule availability, and guide you through booking without needing complex navigation.',
   },
 ];
 
@@ -117,158 +112,122 @@ export default function Home() {
     <div className="home-container">
       <Navbar />
 
-      {/* ==================== HERO ==================== */}
+      {/* HERO SECTION */}
       <section className="home-hero">
         <div className="home-hero-bg">
-          <div className="home-aurora blob-1" />
-          <div className="home-aurora blob-2" />
-          <div className="home-dot-grid" />
+          <div className="home-grid-pattern" />
         </div>
 
         <div className="home-hero-content">
           <div className="home-hero-grid">
             <div className="home-hero-left">
-              <div className="home-hero-badge">
-                <div className="home-hero-badge-dot-container">
-                  <div className="home-hero-badge-dot" />
-                  <div className="home-hero-badge-dot-pulse" />
-                </div>
-                <span>AI-Powered Healthcare Platform</span>
+              <div className="home-badge">
+                <span className="home-badge-dot" />
+                <span>Next-Gen Hospital Management System</span>
               </div>
 
               <h1 className="home-hero-title">
-                Smart Healthcare. <span className="home-hero-title-highlight">Smarter Appointments.</span>
+                Smart Care. <span className="home-hero-title-highlight">Seamless Queues.</span>
               </h1>
 
               <p className="home-hero-desc">
-                Book appointments, track queues in real time, and connect with doctors through
-                an intelligent hospital management platform powered by AI.
+                Experience effortless appointment booking, real-time queue tracking, and AI-powered healthcare coordination designed for modern medical centers.
               </p>
 
               <div className="home-hero-actions">
-                <Link to="/register" className="home-btn-primary">
+                <Link to="/register" className="btn btn-primary btn-lg">
                   Book Appointment
-                  <MdArrowForward className="icon-arrow" />
+                  <MdArrowForward />
                 </Link>
-                <Link to="/doctors" className="home-btn-secondary">
-                  <MdSearch className="icon-search" />
+                <Link to="/doctors" className="btn btn-secondary btn-lg">
+                  <MdSearch />
                   Find a Doctor
                 </Link>
               </div>
 
-              <div className="home-trust-indicators">
-                <div className="home-trust-avatars">
-                  <div className="home-avatar avatar-1">Dr</div>
-                  <div className="home-avatar avatar-2">Pt</div>
-                  <div className="home-avatar avatar-3">Rx</div>
-                  <div className="home-avatar avatar-4">AI</div>
+              <div className="home-hero-trust">
+                <div className="trust-pill">
+                  <MdCheckCircle className="trust-icon" />
+                  <span>Real-time STOMP WebSockets</span>
                 </div>
-                <div className="home-trust-rating">
-                  <div className="home-stars">
-                    {[...Array(5)].map((_, i) => (
-                      <MdStar key={i} className="icon-star" />
-                    ))}
-                    <span className="home-rating-score">4.9/5</span>
-                  </div>
-                  <p className="home-rating-desc">Trusted by 10,000+ patients</p>
+                <div className="trust-pill">
+                  <MdCheckCircle className="trust-icon" />
+                  <span>Role-based Security</span>
                 </div>
               </div>
             </div>
 
             <div className="home-hero-right">
-              <div className="home-dashboard-preview">
-                <div className="home-floating-card top-card">
-                  <div className="home-floating-icon emerald">
-                    <MdCheckCircle />
+              <div className="home-preview-card">
+                <div className="preview-card-header">
+                  <div className="preview-header-title">
+                    <MdLocalHospital className="preview-hospital-icon" />
+                    <span>Live Queue Status</span>
                   </div>
-                  <div>
-                    <p className="home-floating-label">Appointment</p>
-                    <p className="home-floating-value">Confirmed ✓</p>
-                  </div>
+                  <span className="live-status-pill">● Active Queue</span>
                 </div>
 
-                <div className="home-floating-card bottom-card">
-                  <div className="home-floating-icon blue">
-                    <MdPeople />
-                  </div>
-                  <div>
-                    <p className="home-floating-label">Queue Position</p>
-                    <p className="home-floating-value">#3 — ~12 min</p>
-                  </div>
+                <div className="preview-token-box">
+                  <p className="token-label">CURRENT CONSULTATION</p>
+                  <p className="token-number">Token #04</p>
+                  <p className="token-doc">Dr. Ananya Sharma — General Medicine</p>
                 </div>
 
-                <div className="home-main-card">
-                  <div className="home-card-header">
-                    <h3>Today's Schedule</h3>
-                    <span className="home-live-badge">● Live</span>
+                <div className="preview-schedule-list">
+                  <div className="preview-item done">
+                    <span className="item-token">#02</span>
+                    <span className="item-name">Rahul Sharma</span>
+                    <span className="item-status">Completed</span>
                   </div>
-
-                  <div className="home-schedule-list">
-                    {[
-                      { time: '09:00 AM', name: 'Dr. Ravi Kumar', dept: 'Cardiology', status: 'Completed', colorClass: 'status-emerald' },
-                      { time: '09:20 AM', name: 'Dr. Priya Sharma', dept: 'Neurology', status: 'In Progress', colorClass: 'status-blue', active: true },
-                      { time: '10:00 AM', name: 'Dr. Amit Patel', dept: 'Orthopedics', status: 'Upcoming', colorClass: 'status-amber' },
-                      { time: '10:40 AM', name: 'Dr. Ananya Das', dept: 'Pediatrics', status: 'Upcoming', colorClass: 'status-slate' },
-                    ].map((item, i) => (
-                      <div key={i} className={`home-schedule-item ${item.active ? 'active' : ''}`}>
-                        <div className={`home-schedule-dot ${item.colorClass}`} />
-                        <div className="home-schedule-info">
-                          <p className="home-schedule-name">{item.name}</p>
-                          <p className="home-schedule-dept">{item.dept}</p>
-                        </div>
-                        <div className="home-schedule-time">
-                          <p className="time">{item.time}</p>
-                          <p className={`status ${item.colorClass}`}>{item.status}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="preview-item current">
+                    <span className="item-token">#03</span>
+                    <span className="item-name">Priya Patel</span>
+                    <span className="item-status">In Consultation</span>
+                  </div>
+                  <div className="preview-item waiting">
+                    <span className="item-token">#04</span>
+                    <span className="item-name">Your Turn Next</span>
+                    <span className="item-status">Waiting (~5 min)</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <div className="home-scroll-indicator">
-          <div className="home-mouse">
-            <div className="home-mouse-wheel" />
-          </div>
-        </div>
       </section>
 
-      {/* ==================== STATS ==================== */}
+      {/* STATS SECTION */}
       <section className="home-stats-section">
         <div className="home-stats-grid">
           {stats.map((stat, i) => (
-            <div key={i} className={`home-stat-card delay-${i}`}>
-              <stat.icon className="home-stat-icon" />
-              <p className="home-stat-value">{stat.value}</p>
-              <p className="home-stat-label">{stat.label}</p>
+            <div key={i} className="home-stat-card">
+              <div className="home-stat-icon-wrap">
+                <stat.icon />
+              </div>
+              <div>
+                <p className="home-stat-val">{stat.value}</p>
+                <p className="home-stat-lbl">{stat.label}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ==================== FEATURES ==================== */}
+      {/* FEATURES SECTION */}
       <section className="home-features-section">
         <div className="home-section-header">
-          <span className="home-section-badge">
-            <MdStar /> Features
-          </span>
-          <h2>
-            Everything You Need for <span>Smart Healthcare</span>
-          </h2>
+          <span className="home-section-tag">Key Capabilities</span>
+          <h2>Designed for Exceptional Care</h2>
           <p>
-            A comprehensive platform designed to streamline every aspect of hospital
-            appointment management — from booking to consultation.
+            An end-to-end digital hospital ecosystem connecting patients, doctors, receptionists, and administrators.
           </p>
         </div>
 
         <div className="home-features-grid">
           {features.map((feature, i) => (
-            <div key={i} className={`home-feature-card delay-${i}`}>
-              <div className={`home-feature-icon-wrapper ${feature.iconClass}`}>
-                <feature.icon className="home-feature-icon" />
+            <div key={i} className="home-feature-card">
+              <div className={`home-feature-icon-wrap ${feature.iconClass}`}>
+                <feature.icon />
               </div>
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
@@ -277,168 +236,108 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ==================== HOW IT WORKS ==================== */}
-      <section className="home-how-it-works-section">
+      {/* HOW IT WORKS */}
+      <section className="home-workflow-section">
         <div className="home-section-header">
-          <span className="home-section-badge accent">How It Works</span>
-          <h2>
-            Your Appointment in <span>5 Simple Steps</span>
-          </h2>
+          <span className="home-section-tag">Simple Process</span>
+          <h2>How SmartHospital Works</h2>
         </div>
 
-        <div className="home-steps-container">
-          <div className="home-steps-grid">
-            {steps.map((step, i) => (
-              <div key={i} className={`home-step-item delay-${i}`}>
-                {i < 4 && <div className="home-step-connector" />}
-                <div className="home-step-number-container">
-                  <div className="home-step-number">{step.number}</div>
-                </div>
-                <div className="home-step-info">
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="home-steps-grid">
+          {steps.map((step, i) => (
+            <div key={i} className="home-step-card">
+              <div className="step-num">{step.number}</div>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ==================== DEPARTMENTS ==================== */}
+      {/* DEPARTMENTS */}
       <section className="home-departments-section">
         <div className="home-section-header">
-          <span className="home-section-badge">Departments</span>
-          <h2>
-            Specialized <span>Medical Departments</span>
-          </h2>
-          <p>
-            Access expert care across multiple specialties. Each department is staffed with experienced professionals.
-          </p>
+          <span className="home-section-tag">Specialties</span>
+          <h2>Clinical Departments</h2>
+          <p>Comprehensive care across multiple specialized medical fields.</p>
         </div>
 
-        <div className="home-departments-grid">
+        <div className="home-dept-grid">
           {departments.map((dept, i) => (
-            <Link key={i} to="/departments" className={`home-dept-card delay-${i}`}>
-              <div className={`home-dept-icon-wrapper ${dept.colorClass}`}>
-                <dept.icon className="home-dept-icon" />
+            <Link key={i} to="/departments" className="home-dept-card">
+              <div className={`home-dept-icon ${dept.colorClass}`}>
+                <dept.icon />
               </div>
               <h3>{dept.name}</h3>
-              <p>{dept.doctors} Doctors</p>
+              <span className="dept-link">Explore Department &rarr;</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* ==================== AI ASSISTANT ==================== */}
+      {/* AI ASSISTANT SECTION */}
       <section className="home-ai-section">
         <div className="home-ai-container">
-          <div className="home-ai-card">
-            <div className="home-aurora blob-ai" />
+          <div className="home-ai-grid">
+            <div className="home-ai-info">
+              <span className="ai-tag">
+                <MdSmartToy /> AI Assistant
+              </span>
+              <h2>Instant Healthcare Support, Powered by AI</h2>
+              <p>
+                Need assistance finding the right doctor or checking appointment slots? Our built-in assistant guides you effortlessly.
+              </p>
+              <Link to="/register" className="btn btn-indigo btn-lg">
+                <MdSmartToy /> Get Started with AI
+              </Link>
+            </div>
 
-            <div className="home-ai-grid">
-              <div className="home-ai-content">
-                <div className="home-ai-badge">
-                  <MdSmartToy /> AI-Powered Assistant
-                </div>
-                <h2>
-                  Meet Your Personal <span>Healthcare Assistant</span>
-                </h2>
-                <p>
-                  Our AI chatbot, powered by Google Gemini, helps you find doctors,
-                  discover available slots, book appointments, and track your queue —
-                  all through natural conversation.
-                </p>
-                <Link to="/register" className="home-btn-ai">
-                  <MdSmartToy /> Chat with AI
-                  <MdArrowForward className="icon-arrow" />
-                </Link>
+            <div className="home-ai-chat-preview">
+              <div className="chat-bubble bot">
+                👋 Hello! How can I assist with your appointment today?
               </div>
-
-              <div className="home-ai-preview">
-                <div className="home-ai-chat-box">
-                  <div className="home-ai-chat-header">
-                    <div className="home-ai-avatar">
-                      <MdSmartToy />
-                    </div>
-                    <div>
-                      <p className="home-ai-name">AI Assistant</p>
-                      <p className="home-ai-status">
-                        <span className="home-ai-status-dot" /> Online
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="home-ai-chat-messages">
-                    <div className="home-chat-msg user">
-                      <p>Hi! I need to see a cardiologist tomorrow.</p>
-                    </div>
-                    <div className="home-chat-msg bot">
-                      <p>
-                        I found 3 cardiologists available tomorrow. The earliest slot is with
-                        <strong> Dr. Ravi Kumar at 9:20 AM</strong>. Shall I book it?
-                      </p>
-                    </div>
-                    <div className="home-chat-msg user">
-                      <p>Yes, please!</p>
-                    </div>
-                    <div className="home-chat-msg bot">
-                      <p>
-                        ✅ Booked! APT-20260812-0023 with Dr. Ravi Kumar, tomorrow 9:20 AM, Cardiology.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <div className="chat-bubble user">
+                I'd like to check Cardiology doctor availability tomorrow.
+              </div>
+              <div className="chat-bubble bot">
+                We have Dr. Ravi Kumar available tomorrow at 10:00 AM and 02:30 PM. Would you like me to reserve a slot?
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ==================== FAQ ==================== */}
+      {/* FAQ SECTION */}
       <section className="home-faq-section">
         <div className="home-faq-container">
           <div className="home-section-header">
-            <span className="home-section-badge warning">FAQ</span>
-            <h2>
-              Frequently Asked <span>Questions</span>
-            </h2>
+            <span className="home-section-tag">FAQs</span>
+            <h2>Frequently Asked Questions</h2>
           </div>
 
           <div className="home-faq-list">
             {faqs.map((faq, i) => (
               <details key={i} className="home-faq-item">
-                <summary className="home-faq-summary">
-                  <h3>{faq.q}</h3>
-                  <div className="home-faq-icon">
-                    <MdArrowForward />
-                  </div>
-                </summary>
-                <div className="home-faq-answer">
-                  {faq.a}
-                </div>
+                <summary className="home-faq-summary">{faq.q}</summary>
+                <p className="home-faq-answer">{faq.a}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ==================== FINAL CTA ==================== */}
+      {/* FINAL CTA */}
       <section className="home-cta-section">
-        <div className="home-cta-container">
-          <h2>
-            Ready to Experience <span>Smart Healthcare?</span>
-          </h2>
-          <p>
-            Join thousands of patients who have already transformed their healthcare
-            experience. Register today and book your first appointment in minutes.
-          </p>
-          <div className="home-cta-actions">
-            <Link to="/register" className="home-btn-primary cta-btn">
-              Get Started Free
-              <MdArrowForward className="icon-arrow" />
+        <div className="home-cta-content">
+          <h2>Transform Your Hospital Experience Today</h2>
+          <p>Join patients and doctors benefiting from real-time queue management and smart scheduling.</p>
+          <div className="home-cta-buttons">
+            <Link to="/register" className="btn btn-primary btn-lg">
+              Create Account
+              <MdArrowForward />
             </Link>
-            <Link to="/doctors" className="home-btn-white cta-btn">
-              Browse Doctors
+            <Link to="/login" className="btn btn-secondary btn-lg">
+              Sign In
             </Link>
           </div>
         </div>

@@ -1,0 +1,252 @@
+/* About.css — same calm hero as Home; pillars & tech tiles reveal on scroll; CTA is a dark token slip */
+
+.about-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.about-main {
+  flex: 1;
+  padding-top: 4.5rem;
+}
+
+.about-header-section {
+  position: relative;
+  overflow: hidden;
+  padding: 5.5rem 1.5rem 4.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+  background:
+    radial-gradient(rgba(11, 51, 48, 0.12) 1px, transparent 1px) 0 0 / 28px 28px,
+    radial-gradient(42rem 26rem at 92% 0%, rgba(255, 182, 39, 0.22), transparent 65%),
+    radial-gradient(44rem 28rem at 0% 0%, rgba(26, 156, 122, 0.2), transparent 65%),
+    linear-gradient(180deg, #E9F7F0, var(--hq-mist));
+}
+
+.about-header-section::before {
+  content: "";
+  position: absolute;
+  top: -8rem;
+  left: 50%;
+  width: 28rem;
+  height: 28rem;
+  margin-left: -14rem;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  background: radial-gradient(circle, var(--hq-jade-soft), transparent 65%);
+  animation: about-drift 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.about-header-content {
+  position: relative;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+.about-header-content>* {
+  animation: about-rise 0.8s var(--hq-ease) both;
+}
+
+.about-header-content> :nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.about-header-content> :nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.about-header-content h1 {
+  margin: 1rem 0 1.25rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4.5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: var(--hq-spruce);
+  text-wrap: balance;
+}
+
+.about-lead {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--color-text-sub);
+}
+
+.about-pillars-section,
+.about-tech-section {
+  padding: 5rem 1.5rem;
+}
+
+.about-tech-section {
+  background: var(--hq-mist);
+}
+
+.about-section-inner {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.about-pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .about-pillars-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.about-tech-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .about-tech-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .about-tech-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* interactive tiles (works on whatever card markup sits inside the grids) */
+.about-pillars-grid>*,
+.about-tech-grid>* {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s var(--hq-ease), box-shadow 0.4s var(--hq-ease), border-color 0.4s;
+}
+
+.about-pillars-grid>*::before,
+.about-tech-grid>*::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--hq-jade-soft), var(--hq-token));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--hq-ease);
+}
+
+@media (hover: hover) {
+
+  .about-pillars-grid>*:hover,
+  .about-tech-grid>*:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary-300);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .about-pillars-grid>*:hover::before,
+  .about-tech-grid>*:hover::before {
+    transform: scaleX(1);
+  }
+}
+
+.about-cta-section {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 5rem 1.5rem;
+  filter: drop-shadow(0 28px 30px rgba(11, 51, 48, 0.28));
+}
+
+.about-cta-card {
+  --notch: 1.4rem;
+  position: relative;
+  padding: 3.75rem 2rem;
+  text-align: center;
+  color: #fff;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(26rem 16rem at 100% 0%, rgba(255, 182, 39, 0.28), transparent 65%), radial-gradient(24rem 16rem at 0% 100%, rgba(26, 156, 122, 0.45), transparent 65%), linear-gradient(135deg, var(--hq-spruce-800), var(--hq-spruce-950));
+  -webkit-mask: radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle var(--notch) at 0 50%, #0000 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle var(--notch) at 100% 50%, #0000 97%, #000) right / 51% 100% no-repeat;
+}
+
+.about-cta-card h2 {
+  margin-bottom: 0.75rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.about-cta-card p {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--hq-on-dark);
+}
+
+@keyframes about-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes about-drift {
+  to {
+    transform: translate(6rem, 3rem) scale(1.15);
+  }
+}
+
+@keyframes about-reveal {
+  from {
+    opacity: 0;
+    translate: 0 2.5rem;
+    scale: 0.97;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+
+  .about-pillars-grid>*,
+  .about-tech-grid>*,
+  .about-cta-card {
+    animation: about-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 5% entry 90%;
+  }
+
+  .about-pillars-grid> :nth-child(2),
+  .about-tech-grid> :nth-child(3n + 2) {
+    animation-range: entry 15% entry 100%;
+  }
+
+  .about-pillars-grid> :nth-child(3),
+  .about-tech-grid> :nth-child(3n) {
+    animation-range: entry 25% entry 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .about-page-container *,
+  .about-page-container *::before {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

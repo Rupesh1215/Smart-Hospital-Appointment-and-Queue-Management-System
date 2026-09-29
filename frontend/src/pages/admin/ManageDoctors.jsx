@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import doctorService from '../../services/doctorService';
 import departmentService from '../../services/departmentService';
 import toast from 'react-hot-toast';
-import { MdLocalHospital, MdAdd, MdEdit, MdDelete, MdSearch } from 'react-icons/md';
+import { MdLocalHospital, MdAdd, MdDelete, MdSearch } from 'react-icons/md';
 import './ManageDoctors.css';
 
 export default function ManageDoctors() {
@@ -14,13 +14,17 @@ export default function ManageDoctors() {
   const [editingDoctor, setEditingDoctor] = useState(null);
 
   const [formData, setFormData] = useState({
-    name: '',
+    doctorName: '',
     email: '',
-    specialization: '',
+    password: '',
+    specialization: 'General Physician',
     departmentId: '',
+    qualification: 'MBBS, MD',
+    experience: 5,
+    phone: '',
     consultationFee: 50,
     maxPatientsPerDay: 20,
-    slotDurationMinutes: 20,
+    averageConsultationTime: 20,
   });
 
   useEffect(() => {
@@ -33,8 +37,13 @@ export default function ManageDoctors() {
         doctorService.getAll(),
         departmentService.getAll(),
       ]);
-      setDoctors(docRes.data?.data || []);
-      setDepartments(deptRes.data?.data || []);
+      const docs = docRes.data?.data || [];
+      const depts = deptRes.data?.data || [];
+      setDoctors(docs);
+      setDepartments(depts);
+      if (depts.length > 0 && !formData.departmentId) {
+        setFormData((prev) => ({ ...prev, departmentId: depts[0].id }));
+      }
     } catch (err) {
       console.error('Failed to load doctors data:', err);
     } finally {
@@ -45,13 +54,17 @@ export default function ManageDoctors() {
   const handleOpenAdd = () => {
     setEditingDoctor(null);
     setFormData({
-      name: '',
+      doctorName: '',
       email: '',
+      password: '',
       specialization: 'General Physician',
       departmentId: departments[0]?.id || '',
+      qualification: 'MBBS, MD',
+      experience: 5,
+      phone: '',
       consultationFee: 50,
       maxPatientsPerDay: 20,
-      slotDurationMinutes: 20,
+      averageConsultationTime: 20,
     });
     setShowModal(true);
   };
@@ -63,6 +76,10 @@ export default function ManageDoctors() {
         await doctorService.update(editingDoctor.id, formData);
         toast.success('Doctor updated successfully');
       } else {
+        if (!formData.password || formData.password.length < 6) {
+          toast.error('Password must be at least 6 characters');
+          return;
+        }
         await doctorService.create(formData);
         toast.success('Doctor added successfully');
       }
@@ -70,7 +87,8 @@ export default function ManageDoctors() {
       fetchData();
     } catch (err) {
       console.error('Error saving doctor:', err);
-      toast.error('Failed to save doctor details');
+      const errMsg = err.response?.data?.message || err.response?.data?.data || 'Failed to save doctor details';
+      toast.error(typeof errMsg === 'string' ? errMsg : 'Failed to save doctor details');
     }
   };
 
@@ -87,9 +105,9 @@ export default function ManageDoctors() {
 
   const filteredDoctors = doctors.filter(
     (d) =>
-      d.name?.toLowerCase().includes(search.toLowerCase()) ||
-      d.specialization?.toLowerCase().includes(search.toLowerCase()) ||
-      d.departmentName?.toLowerCase().includes(search.toLowerCase())
+      (d.doctorName || d.name || '').toLowerCase().includes(search.toLowerCase()) ||
+      (d.specialization || '').toLowerCase().includes(search.toLowerCase()) ||
+      (d.departmentName || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -144,30 +162,33 @@ export default function ManageDoctors() {
                   </td>
                 </tr>
               ) : (
-                filteredDoctors.map((doc) => (
-                  <tr key={doc.id}>
-                    <td>
-                      <div className="docs-name-cell">
-                        <div className="docs-avatar">
-                          {doc.name?.charAt(0) || 'D'}
+                filteredDoctors.map((doc) => {
+                  const docName = doc.doctorName || doc.name || 'Unknown';
+                  return (
+                    <tr key={doc.id}>
+                      <td>
+                        <div className="docs-name-cell">
+                          <div className="docs-avatar">
+                            {docName.charAt(0).toUpperCase()}
+                          </div>
+                          Dr. {docName}
                         </div>
-                        Dr. {doc.name}
-                      </div>
-                    </td>
-                    <td className="docs-dept-cell">{doc.departmentName || 'General'}</td>
-                    <td className="docs-spec-cell">{doc.specialization || 'Consultant'}</td>
-                    <td className="docs-fee-cell">${doc.consultationFee || 50}</td>
-                    <td className="docs-actions-cell">
-                      <button
-                        onClick={() => handleDelete(doc.id)}
-                        className="docs-delete-btn"
-                        title="Delete Doctor"
-                      >
-                        <MdDelete />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="docs-dept-cell">{doc.departmentName || 'General'}</td>
+                      <td className="docs-spec-cell">{doc.specialization || 'Consultant'}</td>
+                      <td className="docs-fee-cell">₹{doc.consultationFee || 50}</td>
+                      <td className="docs-actions-cell">
+                        <button
+                          onClick={() => handleDelete(doc.id)}
+                          className="docs-delete-btn"
+                          title="Delete Doctor"
+                        >
+                          <MdDelete />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -188,9 +209,9 @@ export default function ManageDoctors() {
                 <input
                   type="text"
                   required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Dr. John Doe"
+                  value={formData.doctorName}
+                  onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })}
+                  placeholder="e.g. John Doe"
                   className="docs-form-input"
                 />
               </div>
@@ -206,6 +227,21 @@ export default function ManageDoctors() {
                   className="docs-form-input"
                 />
               </div>
+
+              {!editingDoctor && (
+                <div className="docs-form-group">
+                  <label className="docs-form-label">Password</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="At least 6 characters"
+                    className="docs-form-input"
+                  />
+                </div>
+              )}
 
               <div className="docs-form-group">
                 <label className="docs-form-label">Specialization</label>
@@ -236,7 +272,7 @@ export default function ManageDoctors() {
 
               <div className="docs-form-row">
                 <div className="docs-form-group">
-                  <label className="docs-form-label">Fee ($)</label>
+                  <label className="docs-form-label">Fee (₹)</label>
                   <input
                     type="number"
                     value={formData.consultationFee}

@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -38,6 +39,12 @@ public class Queue {
 
     @Indexed
     private String patientId;
+
+    /** Department snapshot from appointment */
+    private String departmentId;
+
+    /** Appointment scheduled start time snapshot */
+    private LocalTime appointmentTime;
 
     private LocalDate queueDate;
 

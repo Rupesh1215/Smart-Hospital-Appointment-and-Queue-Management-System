@@ -1,36 +1,31 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import appointmentService from '../../services/appointmentService';
-import doctorService from '../../services/doctorService';
-import queueService from '../../services/queueService';
-import { formatDate, formatTime, isToday } from '../../utils/dateUtils';
+import { formatDate, formatTime } from '../../utils/dateUtils';
 import toast from 'react-hot-toast';
 import {
-  MdCalendarMonth, MdAccessTime, MdCheckCircle,
-  MdFilterList, MdPerson,
+  MdCalendarMonth, MdCheckCircle, MdPerson,
 } from 'react-icons/md';
 import './DoctorAppointments.css';
 
 export default function DoctorAppointments() {
-  const { user } = useAuth();
-  const [doctorProfile, setDoctorProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('');
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (!dateFilter) {
+      fetchData();
+    }
+  }, [dateFilter]);
+
+  const fetchData = async (selectedDate) => {
+    setLoading(true);
     try {
-      const docsRes = await doctorService.getAll();
-      const allDocs = docsRes.data?.data || [];
-      const currentDoc = allDocs.find((d) => d.email === user?.email || d.userId === user?.id) || allDocs[0];
-      setDoctorProfile(currentDoc);
-      if (currentDoc?.id) {
-        const aptRes = await appointmentService.getAll({ doctorId: currentDoc.id });
-        setAppointments(aptRes.data?.data || []);
-      }
+      const aptRes = await appointmentService.getMine(selectedDate || null);
+      setAppointments(aptRes.data?.data || []);
     } catch (err) {
       toast.error('Failed to load appointments');
     } finally {
@@ -38,19 +33,9 @@ export default function DoctorAppointments() {
     }
   };
 
-  const handleConfirm = async (id) => {
-    try {
-      await appointmentService.update(id, { status: 'CONFIRMED' });
-      toast.success('Appointment confirmed');
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to confirm appointment');
-    }
-  };
-
   const handleCheckIn = async (id) => {
     try {
-      await queueService.checkIn({ appointmentId: id });
+      await appointmentService.checkIn(id);
       toast.success('Patient checked in and added to queue');
       fetchData();
     } catch (err) {
@@ -58,14 +43,10 @@ export default function DoctorAppointments() {
     }
   };
 
-  const filters = ['ALL', 'PENDING', 'CONFIRMED', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
+  const filters = ['ALL', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
 
   const filteredAppointments = appointments
     .filter((apt) => filter === 'ALL' || apt.status === filter)
-    .filter((apt) => {
-      if (!dateFilter) return true;
-      return apt.appointmentDate === dateFilter;
-    })
     .sort((a, b) => {
       const dateA = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
       const dateB = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
@@ -74,8 +55,8 @@ export default function DoctorAppointments() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '16rem' }}>
-        <div style={{ width: '2rem', height: '2rem', border: '4px solid #2563eb', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <div className="doc-spinner-wrap">
+        <div className="doc-spinner" />
       </div>
     );
   }
@@ -146,8 +127,8 @@ export default function DoctorAppointments() {
               </thead>
               <tbody>
                 {filteredAppointments.map((apt) => {
-                  const canConfirm = apt.status === 'PENDING';
-                  const canCheckIn = apt.status === 'CONFIRMED';
+                  const canCheckIn = ['PENDING', 'CONFIRMED'].includes(apt.status);
+                  const isActive = ['CHECKED_IN','IN_QUEUE','IN_CONSULTATION'].includes(apt.status);
                   return (
                     <tr key={apt.id}>
                       <td>
@@ -157,7 +138,7 @@ export default function DoctorAppointments() {
                       <td>{apt.appointmentDate ? formatDate(apt.appointmentDate) : '—'}</td>
                       <td>{apt.startTime ? formatTime(apt.startTime) : '—'}</td>
                       <td>
-                        <p className="doc-apt-cell-sub" style={{ color: '#334155' }}>{apt.reason || '—'}</p>
+                        <p className="doc-apt-cell-sub">{apt.reason || '—'}</p>
                       </td>
                       <td>
                         <span className={`doc-apt-status-badge ${apt.status}`}>
@@ -165,15 +146,13 @@ export default function DoctorAppointments() {
                         </span>
                       </td>
                       <td>
-                        {canConfirm && (
-                          <button onClick={() => handleConfirm(apt.id)} className="doc-apt-action-btn confirm">
-                            <MdCheckCircle /> Confirm
-                          </button>
-                        )}
                         {canCheckIn && (
-                          <button onClick={() => handleCheckIn(apt.id)} className="doc-apt-action-btn confirm" style={{ backgroundColor: '#0f766e', color: '#fff', marginLeft: '0.5rem' }}>
+                          <button onClick={() => handleCheckIn(apt.id)} className="doc-apt-action-btn checkin">
                             <MdPerson /> Check In
                           </button>
+                        )}
+                        {isActive && (
+                          <span style={{ fontSize: '0.75rem', color: '#14b8a6', fontWeight: 600 }}>In Progress</span>
                         )}
                       </td>
                     </tr>

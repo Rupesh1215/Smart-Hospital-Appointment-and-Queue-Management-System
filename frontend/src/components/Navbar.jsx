@@ -61,19 +61,15 @@ export default function Navbar() {
           {/* Auth Buttons */}
           <div className="navbar-auth-desktop">
             {isAuthenticated ? (
-              <Link
-                to={dashboardPath[user?.role] || '/'}
-                className="home-btn-primary"
-                style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-              >
-                Dashboard
+              <Link to={dashboardPath[user?.role] || '/'} className="btn btn-primary btn-sm">
+                Go to Dashboard
               </Link>
             ) : (
               <>
-                <Link to="/login" className="home-btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', borderColor: '#cbd5e1', color: '#334155' }}>
+                <Link to="/login" className="btn btn-secondary btn-sm">
                   Sign In
                 </Link>
-                <Link to="/register" className="home-btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                <Link to="/register" className="btn btn-primary btn-sm">
                   Get Started
                 </Link>
               </>
@@ -84,6 +80,7 @@ export default function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="navbar-mobile-toggle"
+            aria-label="Toggle navigation menu"
           >
             {mobileOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
           </button>
@@ -105,15 +102,15 @@ export default function Navbar() {
             ))}
             <div className="navbar-mobile-auth">
               {isAuthenticated ? (
-                <Link to={dashboardPath[user?.role] || '/'} className="home-btn-primary">
-                  Dashboard
+                <Link to={dashboardPath[user?.role] || '/'} className="btn btn-primary">
+                  Go to Dashboard
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className="home-btn-secondary" style={{ borderColor: '#cbd5e1', color: '#334155' }}>
+                  <Link to="/login" className="btn btn-secondary">
                     Sign In
                   </Link>
-                  <Link to="/register" className="home-btn-primary">
+                  <Link to="/register" className="btn btn-primary">
                     Get Started
                   </Link>
                 </>

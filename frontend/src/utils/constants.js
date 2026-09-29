@@ -29,6 +29,7 @@ export const QUEUE_STATUS = {
   IN_CONSULTATION: 'IN_CONSULTATION',
   COMPLETED: 'COMPLETED',
   SKIPPED: 'SKIPPED',
+  NO_SHOW: 'NO_SHOW',
   CANCELLED: 'CANCELLED',
 };
 
@@ -79,6 +80,7 @@ export const NAV_ITEMS = {
     { label: 'Appointments', path: '/receptionist/appointments', icon: 'MdCalendarMonth' },
     { label: 'Queue', path: '/receptionist/queue', icon: 'MdQueue' },
     { label: 'Check-In', path: '/receptionist/check-in', icon: 'MdCheckCircle' },
+    { label: 'Profile', path: '/receptionist/profile', icon: 'MdPerson' },
   ],
   [ROLES.ADMIN]: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: 'MdDashboard' },
@@ -87,8 +89,10 @@ export const NAV_ITEMS = {
     { label: 'Receptionists', path: '/admin/receptionists', icon: 'MdSupervisorAccount' },
     { label: 'Departments', path: '/admin/departments', icon: 'MdBusiness' },
     { label: 'Appointments', path: '/admin/appointments', icon: 'MdCalendarMonth' },
+    { label: 'Queue Monitor', path: '/admin/queue', icon: 'MdQueue' },
     { label: 'Reports', path: '/admin/reports', icon: 'MdBarChart' },
     { label: 'Audit Logs', path: '/admin/audit-logs', icon: 'MdHistory' },
+    { label: 'Profile', path: '/admin/profile', icon: 'MdPerson' },
     { label: 'Settings', path: '/admin/settings', icon: 'MdSettings' },
   ],
 };

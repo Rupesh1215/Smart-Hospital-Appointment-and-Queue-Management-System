@@ -191,8 +191,12 @@ public class DoctorService {
 
         // Check if the doctor works on this day
         String dayOfWeek = date.getDayOfWeek().name();
-        if (doctor.getWorkingDays() != null && !doctor.getWorkingDays().contains(dayOfWeek)) {
-            return List.of(); // Doctor doesn't work on this day
+        if (doctor.getWorkingDays() != null && !doctor.getWorkingDays().isEmpty()) {
+            boolean worksOnDay = doctor.getWorkingDays().stream()
+                    .anyMatch(day -> day.equalsIgnoreCase(dayOfWeek));
+            if (!worksOnDay) {
+                return List.of(); // Doctor doesn't work on this day
+            }
         }
 
         // Get booked appointments for this doctor on this date (non-cancelled)

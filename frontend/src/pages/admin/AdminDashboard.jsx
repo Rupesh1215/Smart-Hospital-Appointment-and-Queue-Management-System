@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const COLORS = ['#2563eb', '#0f766e', '#f59e0b', '#dc2626', '#8b5cf6', '#06b6d4'];
+  const COLORS = ['#2563eb', '#0d9488', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
   useEffect(() => { fetchData(); }, []);
 
@@ -37,12 +37,12 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="admin-skeleton-container">
-        <div className="skeleton-box h-24" />
-        <div className="admin-stats-grid">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton-box h-24" />)}
+      <div className="space-y-6">
+        <div className="skeleton h-24" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24" />)}
         </div>
-        <div className="skeleton-box h-72" />
+        <div className="skeleton h-72" />
       </div>
     );
   }
@@ -55,10 +55,10 @@ export default function AdminDashboard() {
   ];
 
   const stats = [
-    { label: 'Total Users', value: analytics?.totalUsers || 0, icon: MdPeople, color: '#2563eb', bg: '#eff6ff' },
-    { label: 'Active Doctors', value: analytics?.totalDoctors || 0, icon: MdLocalHospital, color: '#0d9488', bg: '#f0fdfa' },
-    { label: 'Appointments', value: analytics?.totalAppointments || 0, icon: MdCalendarMonth, color: '#d97706', bg: '#fffbeb' },
-    { label: 'Revenue', value: `$${analytics?.estimatedRevenue || 0}`, icon: MdAttachMoney, color: '#16a34a', bg: '#f0fdf4' },
+    { label: 'Total Users', value: analytics?.totalUsers || 0, icon: MdPeople, colorClass: 'stat-blue' },
+    { label: 'Active Doctors', value: analytics?.totalDoctors || 0, icon: MdLocalHospital, colorClass: 'stat-teal' },
+    { label: 'Appointments', value: analytics?.totalAppointments || 0, icon: MdCalendarMonth, colorClass: 'stat-amber' },
+    { label: 'Total Revenue', value: `$${analytics?.estimatedRevenue || 0}`, icon: MdAttachMoney, colorClass: 'stat-emerald' },
   ];
 
   return (
@@ -66,11 +66,11 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="admin-header">
         <div>
-          <h1 className="admin-header-title">Hospital Overview</h1>
-          <p className="admin-header-subtitle">Real-time statistics and analytics</p>
+          <h1 className="admin-header-title">Executive Analytics Overview</h1>
+          <p className="admin-header-subtitle">Real-time hospital metrics, revenue projections, and appointment volume</p>
         </div>
-        <button onClick={fetchData} className="admin-refresh-btn">
-          <MdRefresh /> Refresh
+        <button onClick={fetchData} className="btn btn-secondary btn-sm">
+          <MdRefresh /> Sync Data
         </button>
       </div>
 
@@ -78,8 +78,8 @@ export default function AdminDashboard() {
       <div className="admin-stats-grid">
         {stats.map((stat, i) => (
           <div key={i} className="admin-stat-card">
-            <div className="admin-stat-icon-wrap" style={{ backgroundColor: stat.bg }}>
-              <stat.icon style={{ color: stat.color }} />
+            <div className={`admin-stat-icon ${stat.colorClass}`}>
+              <stat.icon />
             </div>
             <div>
               <p className="admin-stat-val">{stat.value}</p>
@@ -91,17 +91,17 @@ export default function AdminDashboard() {
 
       {/* Charts */}
       <div className="admin-charts-grid">
-        <div className="admin-chart-card">
-          <h3 className="admin-chart-header">
-            <MdBusiness />
+        <div className="card admin-chart-card">
+          <h3 className="text-card-title flex items-center gap-2 mb-4">
+            <MdBusiness className="text-primary-600" />
             Appointments by Department
           </h3>
           <div className="admin-chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={deptData.length > 0 ? deptData : [{ name: 'General', count: 1 }]}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#64748b' }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                 <Tooltip />
                 <Bar dataKey="count" fill="#2563eb" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -109,15 +109,15 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="admin-chart-card">
-          <h3 className="admin-chart-header">
-            <MdCheckCircle />
-            Appointment Status
+        <div className="card admin-chart-card">
+          <h3 className="text-card-title flex items-center gap-2 mb-4">
+            <MdCheckCircle className="text-emerald-600" />
+            Appointment Fulfillment Status
           </h3>
           <div className="admin-chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value">
+                <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value">
                   {statusData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
             {statusData.map((item, i) => (
               <div key={i} className="admin-legend-item">
                 <div className="admin-legend-dot" style={{ backgroundColor: COLORS[i] }} />
-                {item.name}: {item.value}
+                <span>{item.name}: <strong>{item.value}</strong></span>
               </div>
             ))}
           </div>

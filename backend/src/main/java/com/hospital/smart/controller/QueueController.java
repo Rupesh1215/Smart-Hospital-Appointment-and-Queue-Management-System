@@ -2,7 +2,9 @@ package com.hospital.smart.controller;
 
 import com.hospital.smart.dto.ApiResponse;
 import com.hospital.smart.dto.QueueDTO;
+import com.hospital.smart.model.Doctor;
 import com.hospital.smart.model.Patient;
+import com.hospital.smart.repository.DoctorRepository;
 import com.hospital.smart.repository.PatientRepository;
 import com.hospital.smart.security.CustomUserDetails;
 import com.hospital.smart.service.QueueService;
@@ -22,93 +24,105 @@ public class QueueController {
 
     private final QueueService queueService;
     private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 
-    public QueueController(QueueService queueService, PatientRepository patientRepository) {
+    public QueueController(QueueService queueService,
+                           PatientRepository patientRepository,
+                           DoctorRepository doctorRepository) {
         this.queueService = queueService;
         this.patientRepository = patientRepository;
+        this.doctorRepository = doctorRepository;
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // STATE TRANSITION ENDPOINTS
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * POST /api/queues/check-in — Check in a patient for their appointment.
+     * POST /api/queues/check-in — Receptionist checks in a patient.
+     * RECEPTIONIST and ADMIN only.
      */
     @PostMapping("/check-in")
-    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('PATIENT') or hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> checkIn(
-            @Valid @RequestBody QueueDTO.CheckInRequest request) {
-        QueueDTO.Response queue = queueService.checkIn(request.getAppointmentId());
-        return ResponseEntity.ok(
-                ApiResponse.success("Patient checked in", queue));
+            @Valid @RequestBody QueueDTO.CheckInRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.checkIn(request.getAppointmentId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Patient checked in successfully", queue));
     }
 
     /**
-     * POST /api/queues/call-next — Doctor calls the next patient.
+     * POST /api/queues/call-next — Doctor calls the next waiting patient.
+     * DOCTOR only.
      */
     @PostMapping("/call-next")
-    @PreAuthorize("hasRole('DOCTOR') or hasRole('RECEPTIONIST') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> callNext(
-            @Valid @RequestBody QueueDTO.CallNextRequest request) {
-        QueueDTO.Response queue = queueService.callNext(request.getDoctorId());
-        return ResponseEntity.ok(
-                ApiResponse.success("Next patient called", queue));
+            @Valid @RequestBody QueueDTO.CallNextRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.callNext(request.getDoctorId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Next patient called", queue));
     }
 
     /**
-     * POST /api/queues/start — Start consultation.
+     * POST /api/queues/start — Doctor starts consultation (CALLED → IN_CONSULTATION).
+     * DOCTOR only.
      */
     @PostMapping("/start")
-    @PreAuthorize("hasRole('DOCTOR') or hasRole('RECEPTIONIST') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> startConsultation(
-            @Valid @RequestBody QueueDTO.QueueActionRequest request) {
-        QueueDTO.Response queue = queueService.startConsultation(request.getQueueId());
-        return ResponseEntity.ok(
-                ApiResponse.success("Consultation started", queue));
+            @Valid @RequestBody QueueDTO.QueueActionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.startConsultation(request.getQueueId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Consultation started", queue));
     }
 
     /**
-     * POST /api/queues/complete — Complete consultation.
+     * POST /api/queues/complete — Doctor completes consultation (IN_CONSULTATION → COMPLETED).
+     * DOCTOR only.
      */
     @PostMapping("/complete")
-    @PreAuthorize("hasRole('DOCTOR') or hasRole('RECEPTIONIST') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> completeConsultation(
-            @Valid @RequestBody QueueDTO.QueueActionRequest request) {
-        QueueDTO.Response queue = queueService.completeConsultation(request.getQueueId());
-        return ResponseEntity.ok(
-                ApiResponse.success("Consultation completed", queue));
+            @Valid @RequestBody QueueDTO.QueueActionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.completeConsultation(request.getQueueId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Consultation completed", queue));
     }
 
     /**
-     * POST /api/queues/skip — Skip a patient.
+     * POST /api/queues/skip — Doctor or Receptionist skips a patient.
+     * DOCTOR + RECEPTIONIST + ADMIN.
      */
     @PostMapping("/skip")
     @PreAuthorize("hasRole('DOCTOR') or hasRole('RECEPTIONIST') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> skip(
-            @Valid @RequestBody QueueDTO.QueueActionRequest request) {
-        QueueDTO.Response queue = queueService.skip(request.getQueueId());
-        return ResponseEntity.ok(
-                ApiResponse.success("Patient skipped", queue));
+            @Valid @RequestBody QueueDTO.QueueActionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.skip(request.getQueueId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Patient skipped", queue));
     }
 
     /**
-     * GET /api/queues/patient/{patientId} — Get queue entries for a specific patient.
+     * POST /api/queues/no-show — Mark patient as no-show.
+     * DOCTOR + RECEPTIONIST + ADMIN.
      */
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByPatient(
-            @PathVariable String patientId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date) {
-        LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        try {
-            QueueDTO.Response queue = queueService.getByPatient(patientId, targetDate);
-            return ResponseEntity.ok(
-                    ApiResponse.success("Queue retrieved", List.of(queue)));
-        } catch (com.hospital.smart.exception.ResourceNotFoundException e) {
-            return ResponseEntity.ok(
-                    ApiResponse.success("No queue entry found", List.of()));
-        }
+    @PostMapping("/no-show")
+    @PreAuthorize("hasRole('DOCTOR') or hasRole('RECEPTIONIST') or hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<QueueDTO.Response>> noShow(
+            @Valid @RequestBody QueueDTO.QueueActionRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QueueDTO.Response queue = queueService.noShow(request.getQueueId(), userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Patient marked as no-show", queue));
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // QUERY ENDPOINTS
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * GET /api/queues/patient/me — Get current patient's queue status.
+     * GET /api/queues/patient/me — Active queue status for the currently logged-in patient.
+     * PATIENT only.
      */
     @GetMapping("/patient/me")
     @PreAuthorize("hasRole('PATIENT')")
@@ -117,24 +131,70 @@ public class QueueController {
         Patient patient = patientRepository.findByUserId(userDetails.getId())
                 .orElseThrow(() -> new com.hospital.smart.exception.ResourceNotFoundException(
                         "Patient", "userId", userDetails.getId()));
-        QueueDTO.Response queue = queueService.getByPatient(
-                patient.getId(), LocalDate.now());
-        return ResponseEntity.ok(
-                ApiResponse.success("Queue status retrieved", queue));
+        QueueDTO.Response queue = queueService.getActiveByPatient(patient.getId());
+        if (queue == null) {
+            return ResponseEntity.ok(ApiResponse.success("No active queue entry today", null));
+        }
+        return ResponseEntity.ok(ApiResponse.success("Queue status retrieved", queue));
     }
 
     /**
-     * GET /api/queues/{doctorId} — Get queue for a doctor (today by default).
+     * GET /api/queues/doctor/me — Today's queue for the currently logged-in doctor.
+     * DOCTOR only.
+     */
+    @GetMapping("/doctor/me")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getMyDoctorQueue(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Doctor doctor = doctorRepository.findByUserId(userDetails.getId())
+                .orElseThrow(() -> new com.hospital.smart.exception.ResourceNotFoundException(
+                        "Doctor", "userId", userDetails.getId()));
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        List<QueueDTO.Response> queue = queueService.getByDoctor(doctor.getId(), targetDate);
+        return ResponseEntity.ok(ApiResponse.success("Doctor queue retrieved", queue));
+    }
+
+    /**
+     * GET /api/queues/today — All queues for today across all doctors. ADMIN only.
+     */
+    @GetMapping("/today")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getAllToday(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        List<QueueDTO.Response> all = queueService.getAllByDate(targetDate);
+        return ResponseEntity.ok(ApiResponse.success("All queues retrieved", all));
+    }
+
+    /**
+     * GET /api/queues/patient/{patientId} — Queue entries for a specific patient (Receptionist/Admin).
+     */
+    @GetMapping("/patient/{patientId}")
+    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('ADMIN') or hasRole('DOCTOR')")
+    public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByPatient(
+            @PathVariable String patientId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        try {
+            QueueDTO.Response queue = queueService.getByPatient(patientId, targetDate);
+            return ResponseEntity.ok(ApiResponse.success("Queue retrieved", List.of(queue)));
+        } catch (com.hospital.smart.exception.ResourceNotFoundException e) {
+            return ResponseEntity.ok(ApiResponse.success("No queue entry found", List.of()));
+        }
+    }
+
+    /**
+     * GET /api/queues/{doctorId} — Queue for a doctor (today by default). Receptionist/Admin/Doctor.
      */
     @GetMapping("/{doctorId}")
+    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('ADMIN') or hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<List<QueueDTO.Response>>> getByDoctor(
             @PathVariable String doctorId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate date) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         List<QueueDTO.Response> queue = (date != null)
                 ? queueService.getByDoctor(doctorId, date)
                 : queueService.getByDoctorToday(doctorId);
-        return ResponseEntity.ok(
-                ApiResponse.success("Queue retrieved", queue));
+        return ResponseEntity.ok(ApiResponse.success("Queue retrieved", queue));
     }
 }

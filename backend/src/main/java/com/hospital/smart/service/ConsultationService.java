@@ -44,7 +44,7 @@ public class ConsultationService {
             // Also advance queue status to COMPLETED
             try {
                 Optional<Queue> queueOpt = queueRepository.findByAppointmentId(appointment.getId());
-                queueOpt.ifPresent(q -> queueService.completeConsultation(q.getId()));
+                queueOpt.ifPresent(q -> queueService.completeConsultation(q.getId(), "SYSTEM"));
             } catch (Exception e) {
                 // Queue entry might not exist or already updated
             }

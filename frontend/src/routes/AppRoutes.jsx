@@ -7,6 +7,9 @@ import Footer from '../components/Footer';
 import Home from '../pages/public/Home';
 import Login from '../pages/public/Login';
 import Register from '../pages/public/Register';
+import About from '../pages/public/About';
+import Departments from '../pages/public/Departments';
+import Doctors from '../pages/public/Doctors';
 
 // Patient pages
 import PatientDashboard from '../pages/patient/PatientDashboard';
@@ -25,8 +28,10 @@ import DoctorProfile from '../pages/doctor/DoctorProfile';
 import ReceptionistDashboard from '../pages/receptionist/ReceptionistDashboard';
 import ReceptionistPatients from '../pages/receptionist/ReceptionistPatients';
 import ReceptionistAppointments from '../pages/receptionist/ReceptionistAppointments';
+import ReceptionistBookAppointment from '../pages/receptionist/ReceptionistBookAppointment';
 import ReceptionistQueue from '../pages/receptionist/ReceptionistQueue';
 import ReceptionistCheckIn from '../pages/receptionist/ReceptionistCheckIn';
+import ReceptionistProfile from '../pages/receptionist/ReceptionistProfile';
 
 // Admin pages
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -37,6 +42,8 @@ import AdminAppointments from '../pages/admin/AdminAppointments';
 import AdminReports from '../pages/admin/AdminReports';
 import AdminAuditLogs from '../pages/admin/AdminAuditLogs';
 import AdminSettings from '../pages/admin/AdminSettings';
+import AdminProfile from '../pages/admin/AdminProfile';
+import AdminQueueMonitor from '../pages/admin/AdminQueueMonitor';
 import './AppRoutes.css';
 
 // Placeholder pages — will be replaced in later phases
@@ -88,9 +95,9 @@ export default function AppRoutes() {
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<Home />} />
-      <Route path="/about" element={<ComingSoon title="About Us" />} />
-      <Route path="/departments" element={<ComingSoon title="Departments" />} />
-      <Route path="/doctors" element={<ComingSoon title="Our Doctors" />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/departments" element={<Departments />} />
+      <Route path="/doctors" element={<Doctors />} />
 
       {/* Auth Routes — redirect to dashboard if already logged in */}
       <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
@@ -135,8 +142,10 @@ export default function AppRoutes() {
               <Route path="dashboard" element={<ReceptionistDashboard />} />
               <Route path="patients" element={<ReceptionistPatients />} />
               <Route path="appointments" element={<ReceptionistAppointments />} />
+              <Route path="book" element={<ReceptionistBookAppointment />} />
               <Route path="queue" element={<ReceptionistQueue />} />
               <Route path="check-in" element={<ReceptionistCheckIn />} />
+              <Route path="profile" element={<ReceptionistProfile />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </DashboardLayout>
@@ -154,8 +163,10 @@ export default function AppRoutes() {
               <Route path="patients" element={<ManageUsers />} />
               <Route path="receptionists" element={<ManageUsers />} />
               <Route path="appointments" element={<AdminAppointments />} />
+              <Route path="queue" element={<AdminQueueMonitor />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />
+              <Route path="profile" element={<AdminProfile />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>

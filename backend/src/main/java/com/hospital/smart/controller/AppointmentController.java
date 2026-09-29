@@ -2,6 +2,11 @@ package com.hospital.smart.controller;
 
 import com.hospital.smart.dto.ApiResponse;
 import com.hospital.smart.dto.AppointmentDTO;
+import com.hospital.smart.exception.ResourceNotFoundException;
+import com.hospital.smart.model.Patient;
+import com.hospital.smart.model.Doctor;
+import com.hospital.smart.repository.PatientRepository;
+import com.hospital.smart.repository.DoctorRepository;
 import com.hospital.smart.security.CustomUserDetails;
 import com.hospital.smart.service.AppointmentService;
 import jakarta.validation.Valid;
@@ -19,9 +24,15 @@ import java.util.List;
 public class AppointmentController {
 
     private final AppointmentService appointmentService;
+    private final PatientRepository patientRepository;
+    private final DoctorRepository doctorRepository;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    public AppointmentController(AppointmentService appointmentService,
+                                   PatientRepository patientRepository,
+                                   DoctorRepository doctorRepository) {
         this.appointmentService = appointmentService;
+        this.patientRepository = patientRepository;
+        this.doctorRepository = doctorRepository;
     }
 
     /**
@@ -36,6 +47,38 @@ public class AppointmentController {
                 request, userDetails.getId(), userDetails.getRole());
         return ResponseEntity.ok(
                 ApiResponse.success("Appointment booked", apt));
+    }
+
+    /**
+     * GET /api/appointments/mine — Authenticated user gets their own appointments.
+     * PATIENT -> their bookings; DOCTOR -> their patient appointments (optionally filtered by date).
+     */
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse<List<AppointmentDTO.Response>>> getMyAppointments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AppointmentDTO.Response> appointments;
+        String role = userDetails.getRole();
+        if ("PATIENT".equals(role)) {
+            if (date != null) {
+                Patient patient = patientRepository.findByUserId(userDetails.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Patient", "userId", userDetails.getId()));
+                appointments = appointmentService.getByPatientAndDate(patient.getId(), date);
+            } else {
+                appointments = appointmentService.getByPatientUserId(userDetails.getId());
+            }
+        } else if ("DOCTOR".equals(role)) {
+            if (date != null) {
+                Doctor doctor = doctorRepository.findByUserId(userDetails.getId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Doctor", "userId", userDetails.getId()));
+                appointments = appointmentService.getByDoctorAndDate(doctor.getId(), date);
+            } else {
+                appointments = appointmentService.getByDoctorUserId(userDetails.getId());
+            }
+        } else {
+            appointments = appointmentService.getAll();
+        }
+        return ResponseEntity.ok(ApiResponse.success("Appointments retrieved", appointments));
     }
 
     /**
@@ -54,13 +97,14 @@ public class AppointmentController {
         if ("PATIENT".equals(role)) {
             appointments = appointmentService.getByPatientUserId(userDetails.getId());
         } else if ("DOCTOR".equals(role)) {
+            // Doctor viewing their own appointments
             if (doctorId != null && date != null) {
                 appointments = appointmentService.getByDoctorAndDate(doctorId, date);
             } else if (doctorId != null) {
                 appointments = appointmentService.getByDoctor(doctorId);
             } else {
-                // Doctor viewing their own — will be enhanced when doctor profile lookup is added
-                appointments = appointmentService.getAll();
+                // Self-lookup
+                appointments = appointmentService.getByDoctorUserId(userDetails.getId());
             }
         } else {
             // ADMIN or RECEPTIONIST — can view all or filter

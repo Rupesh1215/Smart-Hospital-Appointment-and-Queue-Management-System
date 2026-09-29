@@ -41,38 +41,37 @@ export default function ReceptionistDashboard() {
 
   if (loading) {
     return (
-      <div className="rec-dash-page">
-        <div className="rec-skeleton rec-skeleton-hero" />
-        <div className="rec-stats-grid">
-          {[...Array(4)].map((_, i) => <div key={i} className="rec-skeleton rec-skeleton-card" />)}
+      <div className="space-y-6">
+        <div className="skeleton h-28" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24" />)}
         </div>
-        <div className="rec-skeleton rec-skeleton-table" />
       </div>
     );
   }
 
   const stats = [
-    { label: "Today's Appointments", value: todayApts.length, icon: MdCalendarMonth, class: 'bg-blue-50 text-blue-600' },
-    { label: 'Awaiting Check-In', value: pendingCount, icon: MdSchedule, class: 'bg-amber-50 text-amber-600' },
-    { label: 'Checked In', value: checkedInCount, icon: MdHowToReg, class: 'bg-violet-50 text-violet-600' },
-    { label: 'Completed', value: completedCount, icon: MdCheckCircle, class: 'bg-emerald-50 text-emerald-600' },
+    { label: "Today's Appointments", value: todayApts.length, icon: MdCalendarMonth, colorClass: 'stat-blue' },
+    { label: 'Awaiting Check-In', value: pendingCount, icon: MdSchedule, colorClass: 'stat-amber' },
+    { label: 'Checked In', value: checkedInCount, icon: MdHowToReg, colorClass: 'stat-indigo' },
+    { label: 'Completed', value: completedCount, icon: MdCheckCircle, colorClass: 'stat-emerald' },
   ];
 
   return (
     <div className="rec-dash-page">
-      {/* Welcome + Quick Actions */}
+      {/* Welcome Hero */}
       <div className="rec-welcome-card">
         <div>
-          <p className="rec-welcome-label">Reception</p>
+          <p className="rec-welcome-label">Reception Management</p>
           <h1 className="rec-welcome-title">Welcome, {user?.name?.split(' ')[0] || 'Receptionist'}</h1>
-          <p className="rec-welcome-desc">Manage check-ins, appointments, and patient queues.</p>
+          <p className="rec-welcome-desc">Manage patient check-ins, appointments, and daily queue flow.</p>
         </div>
         <div className="rec-welcome-actions">
-          <Link to="/receptionist/check-in" className="rec-action-btn primary">
-            <MdHowToReg /> Check In
+          <Link to="/receptionist/check-in" className="btn btn-emerald btn-md">
+            <MdHowToReg /> Fast Check-In
           </Link>
-          <Link to="/receptionist/appointments" className="rec-action-btn secondary">
-            <MdPersonAdd /> Walk-In
+          <Link to="/receptionist/appointments" className="btn btn-secondary btn-md">
+            <MdPersonAdd /> Walk-In Booking
           </Link>
         </div>
       </div>
@@ -81,8 +80,8 @@ export default function ReceptionistDashboard() {
       <div className="rec-stats-grid">
         {stats.map((stat, i) => (
           <div key={i} className="rec-stat-card">
-            <div className={`rec-stat-icon-wrap ${stat.class.split(' ')[0]}`}>
-              <stat.icon className={stat.class.split(' ')[1]} />
+            <div className={`rec-stat-icon ${stat.colorClass}`}>
+              <stat.icon />
             </div>
             <div>
               <p className="rec-stat-value">{stat.value}</p>
@@ -93,22 +92,22 @@ export default function ReceptionistDashboard() {
       </div>
 
       {/* Appointments Table */}
-      <div className="rec-card">
+      <div className="card">
         <div className="rec-card-header">
-          <h2 className="rec-card-title">Today's Appointments</h2>
+          <h2 className="text-card-title">Today's Patient Schedule</h2>
           <Link to="/receptionist/appointments" className="rec-card-link">
             View All <MdArrowForward />
           </Link>
         </div>
 
         {todayApts.length === 0 ? (
-          <div className="rec-empty-state">
-            <MdCalendarMonth />
-            <p>No appointments scheduled for today</p>
+          <div className="text-center py-12">
+            <MdCalendarMonth className="text-4xl text-muted mx-auto mb-2" />
+            <p className="text-subtext">No appointments scheduled for today</p>
           </div>
         ) : (
-          <div className="rec-table-wrap">
-            <table className="rec-table">
+          <div className="table-wrapper">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Patient</th>
@@ -120,29 +119,32 @@ export default function ReceptionistDashboard() {
               </thead>
               <tbody>
                 {todayApts.slice(0, 10).map((apt) => {
-                  const statusColor = STATUS_COLORS[apt.status] || STATUS_COLORS.PENDING;
                   const canCheckIn = apt.status === 'PENDING' || apt.status === 'CONFIRMED';
                   return (
                     <tr key={apt.id}>
                       <td>
-                        <p className="rec-cell-title">{apt.patientName || 'Unknown'}</p>
-                        <p className="rec-cell-subtitle">{apt.appointmentNumber}</p>
+                        <p className="font-semibold text-main text-sm">{apt.patientName || 'Unknown'}</p>
+                        <p className="text-xs text-sub">{apt.appointmentNumber}</p>
                       </td>
                       <td>
-                        <p className="rec-cell-title">Dr. {apt.doctorName || 'Unknown'}</p>
-                        <p className="rec-cell-subtitle">{apt.departmentName || '—'}</p>
+                        <p className="font-semibold text-main text-sm">Dr. {apt.doctorName || 'Unknown'}</p>
+                        <p className="text-xs text-sub">{apt.departmentName || '—'}</p>
                       </td>
-                      <td className="rec-cell-title">
+                      <td className="text-xs font-semibold">
                         {apt.startTime ? formatTime(apt.startTime) : '—'}
                       </td>
                       <td>
-                        <span className={`rec-badge ${statusColor.bg} ${statusColor.text}`}>
+                        <span className={`badge ${
+                          apt.status === 'CONFIRMED' ? 'badge-primary' :
+                          apt.status === 'CHECKED_IN' ? 'badge-teal' :
+                          apt.status === 'COMPLETED' ? 'badge-success' : 'badge-warning'
+                        }`}>
                           {apt.status?.replace(/_/g, ' ')}
                         </span>
                       </td>
                       <td>
                         {canCheckIn && (
-                          <Link to="/receptionist/check-in" className="rec-btn-sm">
+                          <Link to="/receptionist/check-in" className="btn btn-primary btn-sm">
                             <MdHowToReg /> Check In
                           </Link>
                         )}
@@ -158,19 +160,17 @@ export default function ReceptionistDashboard() {
 
       {/* Available Doctors */}
       {doctors.length > 0 && (
-        <div className="rec-card">
-          <div className="rec-card-header" style={{ paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
-            <h2 className="rec-card-title">Available Doctors</h2>
-          </div>
+        <div className="card">
+          <h2 className="text-card-title mb-4">On-Duty Doctors</h2>
           <div className="rec-docs-grid">
-            {doctors.filter((d) => d.available).slice(0, 6).map((doc) => (
+            {doctors.filter((d) => d.available !== false).slice(0, 6).map((doc) => (
               <div key={doc.id} className="rec-doc-item">
                 <div className="rec-doc-avatar">
-                  {doc.doctorName?.charAt(0)?.toUpperCase() || 'D'}
+                  {(doc.doctorName || doc.name || 'D').charAt(0).toUpperCase()}
                 </div>
                 <div className="rec-doc-info">
-                  <p className="rec-doc-name">Dr. {doc.doctorName || 'Unknown'}</p>
-                  <p className="rec-doc-dept">{doc.departmentName || 'General'}</p>
+                  <p className="rec-doc-name">Dr. {doc.doctorName || doc.name}</p>
+                  <p className="rec-doc-dept">{doc.departmentName || 'Consultant'}</p>
                 </div>
               </div>
             ))}

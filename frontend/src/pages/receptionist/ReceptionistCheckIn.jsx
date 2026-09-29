@@ -3,7 +3,7 @@ import appointmentService from '../../services/appointmentService';
 import queueService from '../../services/queueService';
 import { formatDate, formatTime, isToday } from '../../utils/dateUtils';
 import toast from 'react-hot-toast';
-import { MdSearch, MdHowToReg, MdCheckCircle, MdCalendarMonth } from 'react-icons/md';
+import { MdSearch, MdHowToReg, MdCheckCircle, MdCalendarMonth, MdQueue } from 'react-icons/md';
 import './ReceptionistCheckIn.css';
 
 export default function ReceptionistCheckIn() {
@@ -20,9 +20,9 @@ export default function ReceptionistCheckIn() {
     try {
       const res = await appointmentService.getAll();
       const all = res.data?.data || [];
-      // Only show today's pending/confirmed appointments for check-in
+      // Show today's CONFIRMED appointments (they're ready for check-in)
       const eligible = all.filter(
-        (a) => a.appointmentDate && isToday(a.appointmentDate) && ['PENDING', 'CONFIRMED'].includes(a.status)
+        (a) => a.appointmentDate && isToday(a.appointmentDate) && a.status === 'CONFIRMED'
       );
       setAppointments(eligible);
     } catch (err) {
@@ -35,8 +35,13 @@ export default function ReceptionistCheckIn() {
   const handleCheckIn = async (apt) => {
     setProcessing(apt.id);
     try {
-      await queueService.checkIn({ appointmentId: apt.id });
-      toast.success(`${apt.patientName || 'Patient'} checked in successfully!`);
+      const res = await queueService.checkIn({ appointmentId: apt.id });
+      const queueEntry = res.data?.data;
+      const qNum = queueEntry?.queueNumber;
+      toast.success(
+        `${apt.patientName || 'Patient'} checked in${qNum ? ` — Queue #${qNum}` : ''}!`,
+        { icon: '🏥', duration: 4000 }
+      );
       setCheckedIn((prev) => new Set([...prev, apt.id]));
       // Refresh to remove checked-in appointments
       setTimeout(fetchAppointments, 1500);

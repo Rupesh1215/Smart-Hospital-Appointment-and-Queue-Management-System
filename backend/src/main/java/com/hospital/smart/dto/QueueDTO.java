@@ -54,10 +54,17 @@ public class QueueDTO {
         private String doctorName;
         private String patientId;
         private String patientName;
+        /** Department the appointment belongs to */
+        private String departmentId;
+        private String departmentName;
         private LocalDate queueDate;
+        /** Scheduled appointment time (snapshot) */
+        private String appointmentTime;
         private int queueNumber;
         private String status;
         private int estimatedWaitingTime;
+        /** How many WAITING patients are ahead of this one */
+        private int patientsAhead;
         private String checkInTime;
         private String calledTime;
         private String consultationStartTime;
