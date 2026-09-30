@@ -93,7 +93,32 @@
   --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
   --shadow-card-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
   --shadow-dropdown: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+
+  /* ── Hospital UI (HQ) design tokens ─────────────────────────────────────── */
+
+  /* Spruce (deep forest green) — primary brand dark tone */
+  --hq-spruce-950: #061e1b;
+  --hq-spruce-800: #0b3330;
+  --hq-spruce:     #0b3330;   /* alias for 800 */
+
+  /* Jade (vivid green) — accent / interactive */
+  --hq-jade:       #1a9c7a;
+  --hq-jade-soft:  #1a9c7a;   /* same; kept for legacy references */
+
+  /* Token amber — the hospital queue-token colour */
+  --hq-token:      #ffb627;
+  --hq-token-soft: rgba(255, 182, 39, 0.15);
+
+  /* Mist — very light surface used for alternating sections */
+  --hq-mist:       #f0f6f4;
+
+  /* On-dark text (used inside dark panels) */
+  --hq-on-dark:    rgba(207, 232, 223, 0.8);
+
+  /* Easing curve used for premium animations */
+  --hq-ease:       cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 
 /* ==========================================================================
    BASE & RESET

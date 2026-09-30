@@ -21,8 +21,8 @@ export default function DoctorQueue() {
   const [actionLoading, setActionLoading] = useState('');
 
   // Resolve doctor profile from JWT-based endpoint first, else fall back to list lookup
-  const resolveDoctorAndFetch = useCallback(async () => {
-    setLoading(true);
+  const resolveDoctorAndFetch = useCallback(async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       let docId = null;
       try {
@@ -58,11 +58,17 @@ export default function DoctorQueue() {
     } catch (err) {
       console.error('Doctor queue fetch error:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }, [user]);
 
-  useEffect(() => { resolveDoctorAndFetch(); }, [resolveDoctorAndFetch]);
+  useEffect(() => {
+    resolveDoctorAndFetch(false);
+    const interval = setInterval(() => {
+      resolveDoctorAndFetch(true);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [resolveDoctorAndFetch]);
 
   // WebSocket — live updates
   const { data: wsData, connected } = useWebSocket(

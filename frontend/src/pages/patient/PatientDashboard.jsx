@@ -22,23 +22,30 @@ export default function PatientDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const res = await appointmentService.getAll();
       setAppointments(res.data.data || []);
     } catch (err) {
       console.error('Failed to load appointments:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchAppointments(false);
+    const interval = setInterval(() => {
+      fetchAppointments(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   const todayApts = appointments.filter((a) => a.appointmentDate && isToday(a.appointmentDate));
-  const upcomingApts = appointments.filter((a) => ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(a.status));
+  const upcomingApts = appointments.filter((a) =>
+    ['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'IN_PROGRESS'].includes(a.status)
+  );
   const completedApts = appointments.filter((a) => a.status === 'COMPLETED');
 
   const stats = [

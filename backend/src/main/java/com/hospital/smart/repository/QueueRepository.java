@@ -17,7 +17,9 @@ public interface QueueRepository extends MongoRepository<Queue, String> {
     List<Queue> findByDoctorIdAndQueueDateAndStatus(
             String doctorId, LocalDate date, QueueStatus status);
 
-    Optional<Queue> findByPatientIdAndQueueDate(String patientId, LocalDate date);
+    List<Queue> findByPatientIdAndQueueDate(String patientId, LocalDate date);
+
+    List<Queue> findByPatientIdAndQueueDateOrderByQueueNumberDesc(String patientId, LocalDate date);
 
     Optional<Queue> findByAppointmentId(String appointmentId);
 

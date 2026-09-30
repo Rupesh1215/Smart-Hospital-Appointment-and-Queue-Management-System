@@ -2,7 +2,18 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const WS_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080').replace('/api', '') + '/ws';
+const getWsUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && envUrl.startsWith('http')) {
+    return envUrl.replace(/\/api\/?$/, '') + '/ws';
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin + '/ws';
+  }
+  return 'http://localhost:8080/ws';
+};
+
+const WS_URL = getWsUrl();
 
 /**
  * Custom hook for WebSocket subscription via STOMP.

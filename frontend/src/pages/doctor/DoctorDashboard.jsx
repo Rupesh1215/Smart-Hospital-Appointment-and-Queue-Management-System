@@ -24,9 +24,8 @@ export default function DoctorDashboard() {
   const [notes, setNotes] = useState('');
   const [savingConsultation, setSavingConsultation] = useState(false);
 
-  useEffect(() => { fetchDoctorData(); }, [user]);
-
-  const fetchDoctorData = async () => {
+  const fetchDoctorData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const docsRes = await doctorService.getAll();
       const allDocs = docsRes.data?.data || [];
@@ -43,9 +42,17 @@ export default function DoctorDashboard() {
     } catch (err) {
       console.error('Error fetching doctor dashboard data:', err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchDoctorData(false);
+    const interval = setInterval(() => {
+      fetchDoctorData(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleCallNext = async () => {
     if (!doctorProfile?.id) return;

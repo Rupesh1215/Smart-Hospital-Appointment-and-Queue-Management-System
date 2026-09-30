@@ -43,12 +43,17 @@ export default function ReceptionistQueue() {
     })();
   }, []);
 
-  // Fetch queue when doctor changes
+  // Fetch queue when doctor changes with periodic background polling
   useEffect(() => {
     if (!selectedDoctor) return;
-    queueService.getByDoctor(selectedDoctor).then((res) => {
-      setQueueEntries(res.data?.data || []);
-    }).catch(() => setQueueEntries([]));
+    const fetchQueue = () => {
+      queueService.getByDoctor(selectedDoctor).then((res) => {
+        setQueueEntries(res.data?.data || []);
+      }).catch(() => setQueueEntries([]));
+    };
+    fetchQueue();
+    const interval = setInterval(fetchQueue, 3000);
+    return () => clearInterval(interval);
   }, [selectedDoctor]);
 
   // WebSocket — live updates for selected doctor

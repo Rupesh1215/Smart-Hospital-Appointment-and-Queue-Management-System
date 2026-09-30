@@ -326,9 +326,11 @@ public class QueueService {
 
     /** Get queue entry for a patient on a given date. */
     public QueueDTO.Response getByPatient(String patientId, LocalDate date) {
-        Queue queue = queueRepository.findByPatientIdAndQueueDate(patientId, date)
-                .orElseThrow(() -> new ResourceNotFoundException("Queue", "patientId", patientId));
-        return toResponse(queue);
+        List<Queue> list = queueRepository.findByPatientIdAndQueueDateOrderByQueueNumberDesc(patientId, date);
+        if (list.isEmpty()) {
+            throw new ResourceNotFoundException("Queue", "patientId", patientId);
+        }
+        return toResponse(list.get(0));
     }
 
     /**
@@ -340,13 +342,15 @@ public class QueueService {
                 QueueStatus.WAITING, QueueStatus.CALLED, QueueStatus.IN_CONSULTATION);
         List<Queue> active = queueRepository.findByPatientIdAndQueueDateAndStatusIn(
                 patientId, LocalDate.now(), activeStatuses);
-        if (active.isEmpty()) {
-            // Fall back to any entry today (could be COMPLETED)
-            return queueRepository.findByPatientIdAndQueueDate(patientId, LocalDate.now())
-                    .map(this::toResponse)
-                    .orElse(null);
+        if (!active.isEmpty()) {
+            return toResponse(active.get(0));
         }
-        return toResponse(active.get(0));
+        // Fall back to any entry today (could be COMPLETED, SKIPPED, NO_SHOW)
+        List<Queue> allToday = queueRepository.findByPatientIdAndQueueDateOrderByQueueNumberDesc(patientId, LocalDate.now());
+        if (!allToday.isEmpty()) {
+            return toResponse(allToday.get(0));
+        }
+        return null;
     }
 
     /** Get all queues for today — admin monitoring. */

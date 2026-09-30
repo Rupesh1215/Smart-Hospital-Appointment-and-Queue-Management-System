@@ -86,25 +86,60 @@ export default function PatientQueue() {
   const [error, setError] = useState(null);
   const prevStatusRef = useRef(null);
 
-  const fetchQueue = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchQueue = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const res = await queueService.getMyQueue();
-      const entry = res.data?.data;
-      setQueueData(entry || null);
-      prevStatusRef.current = entry?.status || null;
+      const entry = res.data?.data || null;
+
+      setError(null);
+
+      if (entry) {
+        const prevStatus = prevStatusRef.current;
+        const newStatus = entry.status;
+
+        setQueueData(entry);
+        prevStatusRef.current = newStatus;
+
+        if (prevStatus && prevStatus !== newStatus) {
+          if (newStatus === 'CALLED') {
+            toast('🔔 Doctor has called you! Please proceed to the consultation room.', {
+              duration: 6000,
+              style: { background: '#1D4ED8', color: '#fff', fontWeight: '600' },
+            });
+          } else if (newStatus === 'IN_CONSULTATION') {
+            toast('🩺 Your consultation has started.', {
+              duration: 4000,
+              style: { background: '#0F766E', color: '#fff' },
+            });
+          } else if (newStatus === 'COMPLETED') {
+            toast.success('✅ Your consultation is complete!', { duration: 5000 });
+          }
+        }
+      } else {
+        setQueueData(null);
+        prevStatusRef.current = null;
+      }
     } catch (err) {
-      if (err.response?.status !== 404) {
+      if (err.response?.status === 404) {
+        setError(null);
+      } else if (!isBackground) {
         setError('Unable to load your queue status.');
       }
       setQueueData(null);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
-  useEffect(() => { fetchQueue(); }, []);
+  // Initial fetch + periodic background polling (every 3 seconds)
+  useEffect(() => {
+    fetchQueue(false);
+    const interval = setInterval(() => {
+      fetchQueue(true);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   // WebSocket — subscribe to the doctor's queue topic once we know the doctorId
   const doctorId = queueData?.doctorId;
@@ -118,38 +153,42 @@ export default function PatientQueue() {
     if (!wsData || !Array.isArray(wsData)) return;
 
     const myEntry = wsData.find(
-      (q) => q.patientId === queueData?.patientId || q.id === queueData?.id
+      (q) => (queueData?.id && q.id === queueData.id) ||
+             (queueData?.patientId && q.patientId === queueData.patientId)
     );
-    if (!myEntry) return;
 
-    const prevStatus = prevStatusRef.current;
-    const newStatus = myEntry.status;
+    if (myEntry) {
+      const prevStatus = prevStatusRef.current;
+      const newStatus = myEntry.status;
 
-    setQueueData((prev) => ({ ...prev, ...myEntry }));
-    prevStatusRef.current = newStatus;
+      setQueueData((prev) => ({ ...prev, ...myEntry }));
+      prevStatusRef.current = newStatus;
 
-    // Toast notifications on significant status changes
-    if (prevStatus !== newStatus) {
-      if (newStatus === 'CALLED') {
-        toast('🔔 Doctor has called you! Please proceed to the consultation room.', {
-          duration: 6000,
-          style: { background: '#1D4ED8', color: '#fff', fontWeight: '600' },
-        });
-      } else if (newStatus === 'IN_CONSULTATION') {
-        toast('🩺 Your consultation has started.', {
-          duration: 4000,
-          style: { background: '#0F766E', color: '#fff' },
-        });
-      } else if (newStatus === 'COMPLETED') {
-        toast.success('✅ Your consultation is complete!', { duration: 5000 });
-      } else if (newStatus === 'WAITING' && prevStatus) {
-        // Position moved up
-        const pos = myEntry.patientsAhead + 1;
-        toast(`You are now #${pos} in the queue.`, {
-          duration: 3000,
-          icon: '📋',
-        });
+      // Toast notifications on significant status changes
+      if (prevStatus && prevStatus !== newStatus) {
+        if (newStatus === 'CALLED') {
+          toast('🔔 Doctor has called you! Please proceed to the consultation room.', {
+            duration: 6000,
+            style: { background: '#1D4ED8', color: '#fff', fontWeight: '600' },
+          });
+        } else if (newStatus === 'IN_CONSULTATION') {
+          toast('🩺 Your consultation has started.', {
+            duration: 4000,
+            style: { background: '#0F766E', color: '#fff' },
+          });
+        } else if (newStatus === 'COMPLETED') {
+          toast.success('✅ Your consultation is complete!', { duration: 5000 });
+        } else if (newStatus === 'WAITING' && prevStatus) {
+          const pos = (myEntry.patientsAhead || 0) + 1;
+          toast(`You are now #${pos} in the queue.`, {
+            duration: 3000,
+            icon: '📋',
+          });
+        }
       }
+    } else {
+      // Re-fetch in background if not found in list
+      fetchQueue(true);
     }
   }, [wsData]);
 

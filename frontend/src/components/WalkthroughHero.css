@@ -1,0 +1,494 @@
+/* WalkthroughHero.css — needs Theme.css tokens (--hq-*, --font-display, --color-*). */
+
+.wt {
+  position: relative;
+  /* 100svh stage + one ~78svh of scroll per transition */
+  height: calc(100svh + (var(--wt-n) - 1) * 78svh);
+  background: var(--hq-spruce-950);
+}
+
+.wt-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: #dfe6e1; /* only ever visible while the first image decodes */
+}
+
+/* ---------- image layers ---------- */
+.wt-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  will-change: opacity;
+  contain: layout paint;
+}
+
+/* .wt-box is a 16:9 "cover" rectangle. Everything that must stay glued to the
+   render (the queue screen) lives inside it and is positioned in %. On narrow
+   screens the box is wider than the viewport and slides so the scene's focus
+   point (--fx/--fy) stays centred, clamped so no edge ever shows. */
+.wt-box {
+  --W: max(100vw, calc(100svh * var(--ar)));
+  --H: calc(var(--W) / var(--ar));
+  position: absolute;
+  width: var(--W);
+  height: var(--H);
+  left: clamp(calc(100vw - var(--W)), calc(50vw - var(--W) * var(--fx)), 0px);
+  top: clamp(calc(100svh - var(--H)), calc(50svh - var(--H) * var(--fy)), 0px);
+  transform-origin: calc(var(--fx) * 100%) calc(var(--fy) * 100%);
+  will-change: transform;
+  container-type: inline-size; /* lets the queue screen size its text in cqw */
+}
+
+.wt-box > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.wt-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 36, 33, 0.38), rgba(6, 36, 33, 0) 55%),
+    linear-gradient(0deg, rgba(6, 36, 33, 0.3), rgba(6, 36, 33, 0) 40%);
+}
+
+/* ---------- captions ---------- */
+.wt-caps {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.wt-cap {
+  position: absolute;
+  left: clamp(1rem, 5vw, 5rem);
+  bottom: clamp(3.5rem, 12svh, 7rem);
+  width: min(29rem, calc(100vw - 2rem));
+  max-height: calc(100svh - 7.5rem);
+  overflow: hidden;
+  padding: 1.5rem 1.6rem 1.6rem;
+  color: var(--hq-spruce);
+  /* No backdrop-filter: blurring a constantly-moving image every frame is the
+     single most expensive thing on this page. A near-opaque card looks the same. */
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 30px 60px -28px rgba(6, 36, 33, 0.55);
+  will-change: transform, opacity;
+}
+
+.wt-cap[data-active="true"] {
+  pointer-events: auto;
+}
+
+.wt-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hq-jade);
+}
+
+.wt-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--hq-token);
+  box-shadow: 0 0 0 3px rgba(255, 182, 39, 0.28);
+}
+
+.wt-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, 3.4vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--hq-spruce);
+}
+
+.wt-title em {
+  font-style: normal;
+  color: var(--hq-jade);
+  background: linear-gradient(transparent 62%, rgba(255, 182, 39, 0.45) 62%);
+}
+
+.wt-body {
+  margin: 0;
+  font-size: 0.97rem;
+  line-height: 1.6;
+  color: var(--color-text-sub);
+}
+
+.wt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.15rem;
+}
+
+.wt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--hq-jade);
+  text-decoration: none;
+}
+
+.wt-link:hover {
+  color: var(--hq-spruce);
+}
+
+/* chips */
+.wt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+.wt-chip {
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--hq-spruce);
+  background: var(--hq-mist);
+  border: 1px solid var(--color-border);
+}
+
+/* doctors */
+.wt-docs {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.wt-docs li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.wt-avatar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--hq-spruce);
+  background: var(--hq-token);
+}
+
+.wt-doc-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.wt-doc-txt b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.86rem;
+}
+
+.wt-doc-txt small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  color: var(--color-text-sub);
+}
+
+.wt-avail {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-success-600);
+}
+
+/* steps */
+.wt-steps {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.wt-steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.wt-steps b {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  color: var(--hq-spruce);
+  background: var(--hq-token-soft);
+  border: 1px solid rgba(255, 182, 39, 0.7);
+}
+
+/* ---------- progress rail ---------- */
+.wt-rail {
+  position: absolute;
+  z-index: 40;
+  right: clamp(0.6rem, 2vw, 1.75rem);
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.wt-rail-track {
+  position: absolute;
+  inset: 1.1rem auto 1.1rem 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(11, 51, 48, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.wt-rail-bar {
+  position: absolute;
+  inset: 0;
+  transform-origin: top;
+  transform: scaleY(0);
+  background: var(--hq-jade-soft);
+}
+
+.wt-rail-dot {
+  position: relative;
+  width: 0.7rem;
+  height: 0.7rem;
+  padding: 0;
+  border: 2px solid var(--hq-spruce);
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.3s var(--hq-ease), background-color 0.2s, border-color 0.2s;
+}
+
+.wt-rail-dot::after { /* 44px touch target */
+  content: "";
+  position: absolute;
+  inset: -0.85rem -0.6rem;
+}
+
+.wt-rail-dot:hover {
+  transform: scale(1.25);
+}
+
+.wt-rail-dot.on {
+  transform: scale(1.35);
+  background: var(--hq-token);
+  border-color: var(--hq-spruce);
+}
+
+/* ---------- skip + scroll hint ---------- */
+.wt-skip {
+  position: absolute;
+  z-index: 40;
+  right: clamp(1rem, 3vw, 2rem);
+  top: 5.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--hq-spruce);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.85);
+  transition: background-color 0.2s;
+}
+
+.wt-skip:hover {
+  background: #fff;
+}
+
+.wt-hint {
+  position: absolute;
+  z-index: 40;
+  left: 50%;
+  bottom: 1.1rem;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 8px rgba(6, 36, 33, 0.6);
+  pointer-events: none;
+}
+
+.wt-hint svg {
+  font-size: 1.6rem;
+  animation: wt-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes wt-bob {
+  50% { transform: translateY(5px); }
+}
+
+/* ---------- the queue display painted onto the render ---------- */
+.wt-qs {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0.55cqw 0.7cqw;
+  overflow: hidden;
+  color: #fff;
+  border-radius: 0.25cqw;
+  background:
+    radial-gradient(14cqw 6cqw at 100% 0%, rgba(255, 182, 39, 0.18), transparent 70%),
+    linear-gradient(160deg, var(--hq-spruce-800), var(--hq-spruce-950));
+  box-shadow: inset 0 0 0 0.08cqw rgba(255, 255, 255, 0.12), 0 0 3cqw rgba(255, 246, 224, 0.35);
+}
+
+.wt-qs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.6cqw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--hq-on-dark);
+}
+
+.wt-qs-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3cqw;
+  color: #FFD98A;
+}
+
+.wt-qs-live i {
+  width: 0.45cqw;
+  height: 0.45cqw;
+  border-radius: 50%;
+  background: #FFD98A;
+}
+
+.wt-qs-live.on {
+  color: #5EE6A8;
+}
+
+.wt-qs-live.on i {
+  background: #5EE6A8;
+  animation: wt-ping 1.8s ease-out infinite;
+}
+
+@keyframes wt-ping {
+  from { box-shadow: 0 0 0 0 rgba(94, 230, 168, 0.7); }
+  to { box-shadow: 0 0 0 0.6cqw rgba(94, 230, 168, 0); }
+}
+
+.wt-qs-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6cqw;
+  padding-top: 0.28cqw;
+  border-top: 0.06cqw solid rgba(255, 255, 255, 0.1);
+}
+
+.wt-qs-doc {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.wt-qs-doc b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7cqw;
+  font-weight: 700;
+}
+
+.wt-qs-doc small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.52cqw;
+  color: var(--hq-on-dark);
+}
+
+.wt-qs-token {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 1.25cqw;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--hq-token);
+  text-shadow: 0 0 1cqw rgba(255, 182, 39, 0.5);
+}
+
+/* ---------- phones: caption becomes a bottom sheet ---------- */
+@media (max-width: 767px) {
+  .wt-cap {
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    bottom: 0.75rem;
+    max-height: 52svh;
+    padding: 1.1rem 1.15rem 1.2rem;
+    border-radius: 1.4rem;
+  }
+
+  .wt-title { font-size: 1.45rem; }
+  .wt-body { font-size: 0.9rem; }
+  .wt-rail { display: none; }
+  .wt-skip { top: 5.6rem; right: 0.75rem; }
+  .wt-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wt-hint svg,
+  .wt-qs-live.on i { animation: none; }
+}

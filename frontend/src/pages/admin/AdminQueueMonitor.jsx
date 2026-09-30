@@ -26,8 +26,8 @@ export default function AdminQueueMonitor() {
   const [confirmModal, setConfirmModal] = useState(null); // { queueId, type, patientName }
   const [actionLoading, setActionLoading] = useState('');
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
       const [qRes, docRes, deptRes] = await Promise.all([
         queueService.getAllToday(),
@@ -38,13 +38,19 @@ export default function AdminQueueMonitor() {
       setDoctors(docRes.data?.data || []);
       setDepartments(deptRes.data?.data || []);
     } catch (err) {
-      toast.error('Failed to load queue data');
+      if (!isBackground) toast.error('Failed to load queue data');
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll(false);
+    const interval = setInterval(() => {
+      fetchAll(true);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Global WebSocket — get updates across all doctors
   const { data: wsData, connected } = useWebSocket('/topic/queue/all', true);

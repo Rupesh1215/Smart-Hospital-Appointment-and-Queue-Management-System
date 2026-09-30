@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import {
   MdCalendarMonth,
-  MdSearch,
   MdSmartToy,
   MdPeople,
   MdSecurity,
@@ -21,6 +20,7 @@ import {
 } from 'react-icons/md';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
+import WalkthroughHero from '../../components/WalkthroughHero';
 import './Home.css';
 
 const features = [
@@ -112,92 +112,11 @@ export default function Home() {
     <div className="home-container">
       <Navbar />
 
-      {/* HERO SECTION */}
-      <section className="home-hero">
-        <div className="home-hero-bg">
-          <div className="home-grid-pattern" />
-        </div>
-
-        <div className="home-hero-content">
-          <div className="home-hero-grid">
-            <div className="home-hero-left">
-              <div className="home-badge">
-                <span className="home-badge-dot" />
-                <span>Next-Gen Hospital Management System</span>
-              </div>
-
-              <h1 className="home-hero-title">
-                Smart Care. <span className="home-hero-title-highlight">Seamless Queues.</span>
-              </h1>
-
-              <p className="home-hero-desc">
-                Experience effortless appointment booking, real-time queue tracking, and AI-powered healthcare coordination designed for modern medical centers.
-              </p>
-
-              <div className="home-hero-actions">
-                <Link to="/register" className="btn btn-primary btn-lg">
-                  Book Appointment
-                  <MdArrowForward />
-                </Link>
-                <Link to="/doctors" className="btn btn-secondary btn-lg">
-                  <MdSearch />
-                  Find a Doctor
-                </Link>
-              </div>
-
-              <div className="home-hero-trust">
-                <div className="trust-pill">
-                  <MdCheckCircle className="trust-icon" />
-                  <span>Real-time STOMP WebSockets</span>
-                </div>
-                <div className="trust-pill">
-                  <MdCheckCircle className="trust-icon" />
-                  <span>Role-based Security</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="home-hero-right">
-              <div className="home-preview-card">
-                <div className="preview-card-header">
-                  <div className="preview-header-title">
-                    <MdLocalHospital className="preview-hospital-icon" />
-                    <span>Live Queue Status</span>
-                  </div>
-                  <span className="live-status-pill">● Active Queue</span>
-                </div>
-
-                <div className="preview-token-box">
-                  <p className="token-label">CURRENT CONSULTATION</p>
-                  <p className="token-number">Token #04</p>
-                  <p className="token-doc">Dr. Ananya Sharma — General Medicine</p>
-                </div>
-
-                <div className="preview-schedule-list">
-                  <div className="preview-item done">
-                    <span className="item-token">#02</span>
-                    <span className="item-name">Rahul Sharma</span>
-                    <span className="item-status">Completed</span>
-                  </div>
-                  <div className="preview-item current">
-                    <span className="item-token">#03</span>
-                    <span className="item-name">Priya Patel</span>
-                    <span className="item-status">In Consultation</span>
-                  </div>
-                  <div className="preview-item waiting">
-                    <span className="item-token">#04</span>
-                    <span className="item-name">Your Turn Next</span>
-                    <span className="item-status">Waiting (~5 min)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* HERO — scroll-driven hospital walkthrough */}
+      <WalkthroughHero />
 
       {/* STATS SECTION */}
-      <section className="home-stats-section">
+      <section id="after-walkthrough" className="home-stats-section">
         <div className="home-stats-grid">
           {stats.map((stat, i) => (
             <div key={i} className="home-stat-card">
