@@ -43,7 +43,7 @@ public class QueueController {
      * RECEPTIONIST and ADMIN only.
      */
     @PostMapping("/check-in")
-    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RECEPTIONIST') or hasRole('ADMIN') or hasRole('DOCTOR')")
     public ResponseEntity<ApiResponse<QueueDTO.Response>> checkIn(
             @Valid @RequestBody QueueDTO.CheckInRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {

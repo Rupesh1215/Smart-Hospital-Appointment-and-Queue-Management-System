@@ -307,6 +307,8 @@ public class DoctorService {
                 .breakEnd(doctor.getBreakEnd())
                 .isAvailable(doctor.isAvailable())
                 .maxPatientsPerDay(doctor.getMaxPatientsPerDay())
+                .rating(doctor.getRating() > 0 ? doctor.getRating() : 5.0)
+                .totalRatings(doctor.getTotalRatings())
                 .build();
     }
 }

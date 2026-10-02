@@ -143,12 +143,18 @@ export default function Doctors() {
 
                     <div className="doc-card-body">
                       <div className="doc-info-row">
+                        <span className="text-caption">Patient Rating</span>
+                        <span className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                          ⭐ {(doc.rating || 5.0).toFixed(1)} {doc.totalRatings > 0 ? `(${doc.totalRatings} review${doc.totalRatings > 1 ? 's' : ''})` : '(New)'}
+                        </span>
+                      </div>
+                      <div className="doc-info-row">
                         <span className="text-caption">Experience</span>
-                        <span className="text-xs font-semibold">{doc.experienceYears || '5+'} Years</span>
+                        <span className="text-xs font-semibold">{doc.experience || doc.experienceYears || '5+'} Years</span>
                       </div>
                       <div className="doc-info-row">
                         <span className="text-caption">Consultation Fee</span>
-                        <span className="text-xs font-semibold">${doc.consultationFee || '50'}</span>
+                        <span className="text-xs font-semibold">₹{doc.consultationFee || '500'}</span>
                       </div>
                       <div className="doc-info-row">
                         <span className="text-caption">Status</span>

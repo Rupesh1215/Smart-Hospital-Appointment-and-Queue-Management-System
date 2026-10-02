@@ -5,6 +5,7 @@ import com.hospital.smart.exception.ResourceNotFoundException;
 import com.hospital.smart.exception.SlotUnavailableException;
 import com.hospital.smart.model.*;
 import com.hospital.smart.model.enums.AppointmentStatus;
+import com.hospital.smart.model.enums.BookingType;
 import com.hospital.smart.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -23,18 +24,27 @@ public class AppointmentService {
     private final DoctorRepository doctorRepository;
     private final PatientRepository patientRepository;
     private final DepartmentRepository departmentRepository;
+    private final com.hospital.smart.repository.QueueRepository queueRepository;
+    private final UserRepository userRepository;
+    private final CapacityManagementService capacityManagementService;
 
     /** Simple counter for appointment numbers. In production, use a database sequence. */
     private final AtomicLong counter = new AtomicLong(1);
 
     public AppointmentService(AppointmentRepository appointmentRepository,
-                              DoctorRepository doctorRepository,
-                              PatientRepository patientRepository,
-                              DepartmentRepository departmentRepository) {
+                               DoctorRepository doctorRepository,
+                               PatientRepository patientRepository,
+                               DepartmentRepository departmentRepository,
+                               com.hospital.smart.repository.QueueRepository queueRepository,
+                               UserRepository userRepository,
+                               CapacityManagementService capacityManagementService) {
         this.appointmentRepository = appointmentRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.departmentRepository = departmentRepository;
+        this.queueRepository = queueRepository;
+        this.userRepository = userRepository;
+        this.capacityManagementService = capacityManagementService;
     }
 
     /**
@@ -52,9 +62,20 @@ public class AppointmentService {
             // Receptionist booking on behalf of a patient
             patientId = request.getPatientId();
         } else {
-            // Patient booking for themselves — look up their Patient profile
+            // Patient booking for themselves — look up or create their Patient profile
             Patient patient = patientRepository.findByUserId(userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Patient", "userId", userId));
+                    .orElseGet(() -> {
+                        com.hospital.smart.model.User u = userRepository.findById(userId).orElse(null);
+                        Patient newP = Patient.builder()
+                                .userId(userId)
+                                .patientName(u != null ? u.getName() : "Patient")
+                                .email(u != null ? u.getEmail() : "")
+                                .phone(u != null ? u.getPhone() : "")
+                                .gender(u != null ? u.getGender() : com.hospital.smart.model.enums.Gender.MALE)
+                                .isActive(true)
+                                .build();
+                        return patientRepository.save(newP);
+                    });
             patientId = patient.getId();
         }
 
@@ -94,12 +115,29 @@ public class AppointmentService {
         // Allow multiple appointments by the same patient with the same doctor on the same day.
         // (Validation removed as per request)
 
-        // Check daily patient limit
-        long dailyCount = appointmentRepository.countByDoctorIdAndAppointmentDateAndStatusIn(
-                request.getDoctorId(), request.getAppointmentDate(), activeStatuses);
-        if (dailyCount >= doctor.getMaxPatientsPerDay()) {
+        // Check online vs offline capacity allocation for doctor on target date
+        java.util.Map<String, Object> capacity = capacityManagementService
+                .getCapacityMetrics(request.getDoctorId(), request.getAppointmentDate());
+
+        boolean isFullyBooked = Boolean.TRUE.equals(capacity.get("isFullyBooked"));
+        if (isFullyBooked) {
             throw new SlotUnavailableException(
-                    "This doctor has reached the maximum number of patients for this date.");
+                    "Doctor has reached maximum total capacity for this date. Slot booking is currently disabled for this day.");
+        }
+
+        if (request.getBookingType() == BookingType.ONLINE) {
+            long onlineRemaining = ((Number) capacity.getOrDefault("onlineSlotsRemaining", 0)).longValue();
+            if (onlineRemaining <= 0) {
+                throw new SlotUnavailableException(
+                        "Online booking limit reached for Dr. " + doctor.getDoctorName() +
+                        " on this date. Please choose another date or visit for offline walk-in.");
+            }
+        } else if (request.getBookingType() == BookingType.OFFLINE || request.getBookingType() == BookingType.WALK_IN || request.getBookingType() == BookingType.RECEPTIONIST) {
+            long offlineRemaining = ((Number) capacity.getOrDefault("offlineSlotsRemaining", 0)).longValue();
+            if (offlineRemaining <= 0) {
+                throw new SlotUnavailableException(
+                        "Offline walk-in slot capacity reached for this doctor on this date.");
+            }
         }
 
         // Calculate end time
@@ -232,18 +270,36 @@ public class AppointmentService {
                     "Cannot reschedule an appointment that is already " + oldApt.getStatus());
         }
 
-        // Cancel the old appointment
+        // Cancel the old appointment status
         oldApt.setStatus(AppointmentStatus.RESCHEDULED);
         appointmentRepository.save(oldApt);
 
-        // Book a new appointment
+        // Cancel any active queue entry for the old appointment
+        queueRepository.findByAppointmentId(id).ifPresent(q -> {
+            q.setStatus(com.hospital.smart.model.enums.QueueStatus.CANCELLED);
+            queueRepository.save(q);
+        });
+
+        // Determine target doctor (original doctor or selected similar doctor)
+        String targetDoctorId = (request.getNewDoctorId() != null && !request.getNewDoctorId().isBlank())
+                ? request.getNewDoctorId()
+                : oldApt.getDoctorId();
+
+        // Fetch target doctor to verify department compatibility
+        Doctor targetDoctor = doctorRepository.findById(targetDoctorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "id", targetDoctorId));
+
+        String notes = "Free Rebooked Slot (No Extra Payment Required). " +
+                (request.getReason() != null ? request.getReason() : "Patient unable to attend original slot.");
+
+        // Book the new rebooked appointment
         AppointmentDTO.BookRequest bookRequest = AppointmentDTO.BookRequest.builder()
-                .doctorId(oldApt.getDoctorId())
-                .departmentId(oldApt.getDepartmentId())
+                .doctorId(targetDoctorId)
+                .departmentId(targetDoctor.getDepartmentId() != null ? targetDoctor.getDepartmentId() : oldApt.getDepartmentId())
                 .appointmentDate(request.getNewDate())
                 .startTime(request.getNewStartTime())
-                .reason(oldApt.getReason())
-                .notes(request.getReason())
+                .reason(oldApt.getReason() != null ? oldApt.getReason() : "Rebooked Consultation")
+                .notes(notes)
                 .priority(oldApt.getPriority())
                 .bookingType(oldApt.getBookingType())
                 .build();
@@ -294,11 +350,12 @@ public class AppointmentService {
 
     private String generateAppointmentNumber(LocalDate date) {
         String dateStr = date.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        long sequence = counter.getAndIncrement();
-        return String.format("APT-%s-%03d", dateStr, sequence);
+        long countToday = appointmentRepository.countByAppointmentDate(date) + counter.getAndIncrement();
+        int randomSuffix = 100 + (int)(Math.random() * 899);
+        return String.format("APT-%s-%03d%d", dateStr, countToday, randomSuffix);
     }
 
-    private AppointmentDTO.Response toResponse(Appointment apt) {
+    public AppointmentDTO.Response toResponse(Appointment apt) {
         // Resolve patient name
         String patientName = patientRepository.findById(apt.getPatientId())
                 .map(Patient::getPatientName)

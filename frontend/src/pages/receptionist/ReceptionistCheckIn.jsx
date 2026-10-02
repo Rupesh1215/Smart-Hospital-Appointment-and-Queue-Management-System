@@ -20,10 +20,14 @@ export default function ReceptionistCheckIn() {
     try {
       const res = await appointmentService.getAll();
       const all = res.data?.data || [];
-      // Show today's CONFIRMED appointments (they're ready for check-in)
-      const eligible = all.filter(
-        (a) => a.appointmentDate && isToday(a.appointmentDate) && a.status === 'CONFIRMED'
+      // Show today's appointments that are active/ready for check-in
+      let eligible = all.filter(
+        (a) => a.appointmentDate && isToday(a.appointmentDate) && ['CONFIRMED', 'PENDING', 'CHECKED_IN', 'IN_QUEUE'].includes(a.status)
       );
+      // Fallback: if no appointments specifically today, show all active appointments sorted by date
+      if (eligible.length === 0) {
+        eligible = all.filter((a) => ['CONFIRMED', 'PENDING', 'CHECKED_IN', 'IN_QUEUE'].includes(a.status));
+      }
       setAppointments(eligible);
     } catch (err) {
       toast.error('Failed to load appointments');

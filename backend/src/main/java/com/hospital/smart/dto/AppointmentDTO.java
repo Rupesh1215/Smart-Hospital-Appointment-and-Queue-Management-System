@@ -57,6 +57,7 @@ public class AppointmentDTO {
         @NotNull(message = "New start time is required")
         private LocalTime newStartTime;
 
+        private String newDoctorId;
         private String reason;
     }
 

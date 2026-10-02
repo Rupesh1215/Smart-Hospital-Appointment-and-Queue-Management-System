@@ -94,6 +94,8 @@ public class DoctorDTO {
         private LocalTime breakEnd;
         private boolean isAvailable;
         private int maxPatientsPerDay;
+        private double rating;
+        private int totalRatings;
     }
 
     @Data

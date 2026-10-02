@@ -77,6 +77,14 @@ public class Doctor {
     @Builder.Default
     private int maxPatientsPerDay = 30;
 
+    /** Average rating from patient feedback (2.5 to 4.5) */
+    @Builder.Default
+    private double rating = 4.2;
+
+    /** Total number of ratings received */
+    @Builder.Default
+    private int totalRatings = 0;
+
     @CreatedDate
     private LocalDateTime createdAt;
 

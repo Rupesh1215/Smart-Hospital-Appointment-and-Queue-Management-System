@@ -26,6 +26,8 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
 
     List<Appointment> findByPatientIdOrderByAppointmentDateDescStartTimeDesc(String patientId);
 
+    List<Appointment> findByPatientIdAndStatusOrderByAppointmentDateDesc(String patientId, AppointmentStatus status);
+
     List<Appointment> findByPatientIdAndAppointmentDate(String patientId, LocalDate date);
 
     long countByDoctorIdAndAppointmentDateAndStatusIn(
@@ -37,4 +39,6 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
             String doctorId, LocalDate date, AppointmentStatus status);
 
     List<Appointment> findByAppointmentDateAndStatus(LocalDate date, AppointmentStatus status);
+
+    long countByAppointmentDate(LocalDate appointmentDate);
 }

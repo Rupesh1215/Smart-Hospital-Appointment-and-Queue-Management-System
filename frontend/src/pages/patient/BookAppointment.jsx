@@ -26,13 +26,20 @@ const getTodayDateStr = () => {
   return `${year}-${month}-${day}`;
 };
 
-function StarRating({ rating }) {
+function StarRating({ rating, totalRatings }) {
   return (
-    <div className="ba-stars">
+    <div className="ba-stars" style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
       {[1,2,3,4,5].map(s => (
-        <MdStar key={s} style={{ color: s <= Math.round(rating) ? '#F59E0B' : '#D1D5DB', fontSize: '0.9rem' }} />
+        <MdStar key={s} style={{ color: s <= Math.round(rating || 5) ? '#F59E0B' : '#D1D5DB', fontSize: '0.9rem' }} />
       ))}
-      <span className="ba-rating-val">{(rating || 4.5).toFixed(1)}</span>
+      <span className="ba-rating-val" style={{ fontWeight: '700', fontSize: '0.85rem', color: '#0F172A', marginLeft: '0.2rem' }}>
+        {(rating || 5.0).toFixed(1)}
+      </span>
+      {totalRatings > 0 ? (
+        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>({totalRatings} review{totalRatings > 1 ? 's' : ''})</span>
+      ) : (
+        <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>(New)</span>
+      )}
     </div>
   );
 }
@@ -297,7 +304,7 @@ export default function BookAppointment() {
                     <p className="bdc-spec">{doc.specialization}</p>
                     {doc.qualification && <p className="bdc-qual">{doc.qualification}</p>}
 
-                    <StarRating rating={doc.rating || 4.5} />
+                    <StarRating rating={doc.rating} totalRatings={doc.totalRatings} />
 
                     <div className="bdc-stats">
                       {doc.experience > 0 && (

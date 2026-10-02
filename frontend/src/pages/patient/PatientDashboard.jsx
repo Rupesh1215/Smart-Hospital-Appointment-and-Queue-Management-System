@@ -15,18 +15,32 @@ import {
   MdPerson,
   MdSmartToy,
 } from 'react-icons/md';
+import feedbackService from '../../services/feedbackService';
+import FeedbackModal from '../../components/patient/FeedbackModal';
+import RebookModal from '../../components/patient/RebookModal';
 import './PatientDashboard.css';
 
 export default function PatientDashboard() {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pendingFeedback, setPendingFeedback] = useState([]);
+  const [selectedFeedbackApt, setSelectedFeedbackApt] = useState(null);
+  const [selectedRebookApt, setSelectedRebookApt] = useState(null);
 
   const fetchAppointments = async (isBackground = false) => {
     if (!isBackground) setLoading(true);
     try {
       const res = await appointmentService.getAll();
       setAppointments(res.data.data || []);
+
+      // Check pending feedback appointments
+      try {
+        const fbRes = await feedbackService.getPending();
+        setPendingFeedback(fbRes.data?.data || []);
+      } catch (e) {
+        // Silently ignore
+      }
     } catch (err) {
       console.error('Failed to load appointments:', err);
     } finally {
@@ -89,6 +103,31 @@ export default function PatientDashboard() {
         </Link>
       </div>
 
+      {/* Pending Doctor Feedback Banner */}
+      {pendingFeedback.length > 0 && (
+        <div className="pat-feedback-banner">
+          <div className="pat-feedback-banner-content">
+            <span className="pat-fb-star-badge">⭐ Rate Your Doctor</span>
+            <h3>How was your consultation with <strong>Dr. {pendingFeedback[0].doctorName || 'your doctor'}</strong>?</h3>
+            <p>Your feedback helps improve hospital care and rate our doctors!</p>
+          </div>
+          <button
+            className="btn btn-emerald btn-md shadow-lg"
+            onClick={() => setSelectedFeedbackApt(pendingFeedback[0])}
+          >
+            Leave Feedback ⭐
+          </button>
+        </div>
+      )}
+
+      {selectedFeedbackApt && (
+        <FeedbackModal
+          appointment={selectedFeedbackApt}
+          onClose={() => setSelectedFeedbackApt(null)}
+          onSuccess={() => fetchAppointments(true)}
+        />
+      )}
+
       {/* Stats Grid */}
       <div className="pat-stats-grid">
         {stats.map((stat, i) => (
@@ -148,11 +187,36 @@ export default function PatientDashboard() {
                   }`}>
                     {apt.status}
                   </span>
+                  <button
+                    onClick={() => setSelectedRebookApt(apt)}
+                    style={{
+                      background: '#EFF6FF',
+                      color: '#2563EB',
+                      border: '1px solid #BFDBFE',
+                      borderRadius: '8px',
+                      padding: '0.25rem 0.6rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      marginLeft: '0.5rem',
+                    }}
+                    title="Can't attend? Rebook slot for free"
+                  >
+                    Rebook (Free) 🔄
+                  </button>
                 </div>
               ))
             )}
           </div>
         </div>
+
+      {selectedRebookApt && (
+        <RebookModal
+          appointment={selectedRebookApt}
+          onClose={() => setSelectedRebookApt(null)}
+          onSuccess={() => fetchAppointments()}
+        />
+      )}
 
         {/* Quick Actions Column */}
         <div className="pat-side-col">

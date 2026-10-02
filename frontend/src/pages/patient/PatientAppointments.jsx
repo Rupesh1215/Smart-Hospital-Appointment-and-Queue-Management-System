@@ -13,6 +13,9 @@ import {
   MdAccessTime,
   MdSearch,
 } from 'react-icons/md';
+import feedbackService from '../../services/feedbackService';
+import FeedbackModal from '../../components/patient/FeedbackModal';
+import RebookModal from '../../components/patient/RebookModal';
 import './PatientAppointments.css';
 
 export default function PatientAppointments() {
@@ -21,6 +24,9 @@ export default function PatientAppointments() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [pendingFeedback, setPendingFeedback] = useState([]);
+  const [selectedFeedbackApt, setSelectedFeedbackApt] = useState(null);
+  const [selectedRebookApt, setSelectedRebookApt] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -31,6 +37,13 @@ export default function PatientAppointments() {
     try {
       const res = await appointmentService.getMine();
       setAppointments(res.data?.data || []);
+
+      try {
+        const fbRes = await feedbackService.getPending();
+        setPendingFeedback(fbRes.data?.data || []);
+      } catch (e) {
+        // Silently ignore
+      }
     } catch (err) {
       toast.error('Failed to load appointments');
       console.error(err);
@@ -195,6 +208,55 @@ export default function PatientAppointments() {
                         <MdCancel />
                       </button>
                     )}
+                    {apt.status === 'COMPLETED' && (
+                      pendingFeedback.some((p) => p.id === apt.id) ? (
+                        <button
+                          onClick={() => setSelectedFeedbackApt(apt)}
+                          style={{
+                            background: '#F59E0B',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.8rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)',
+                          }}
+                        >
+                          Rate Doctor ⭐
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: '600' }}>
+                          ✅ Rated
+                        </span>
+                      )
+                    )}
+                    {['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'NO_SHOW', 'CANCELLED'].includes(apt.status) && (
+                      <button
+                        onClick={() => setSelectedRebookApt(apt)}
+                        style={{
+                          background: '#2563EB',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
+                        }}
+                        title="Rebook an available slot at no extra cost"
+                      >
+                        Rebook Slot (Free) 🔄
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -208,6 +270,22 @@ export default function PatientAppointments() {
             );
           })}
         </div>
+      )}
+
+      {selectedFeedbackApt && (
+        <FeedbackModal
+          appointment={selectedFeedbackApt}
+          onClose={() => setSelectedFeedbackApt(null)}
+          onSuccess={() => fetchAppointments()}
+        />
+      )}
+
+      {selectedRebookApt && (
+        <RebookModal
+          appointment={selectedRebookApt}
+          onClose={() => setSelectedRebookApt(null)}
+          onSuccess={() => fetchAppointments()}
+        />
       )}
     </div>
   );
