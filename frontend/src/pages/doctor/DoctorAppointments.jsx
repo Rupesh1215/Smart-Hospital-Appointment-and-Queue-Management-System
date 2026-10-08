@@ -45,12 +45,28 @@ export default function DoctorAppointments() {
 
   const filters = ['ALL', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
 
+  const statusPriority = (s) => {
+    switch (s) {
+      case 'IN_CONSULTATION': return 0;
+      case 'CHECKED_IN': case 'IN_QUEUE': return 1;
+      case 'CONFIRMED': case 'PENDING': return 2;
+      case 'COMPLETED': return 3;
+      case 'CANCELLED': return 4;
+      default: return 5;
+    }
+  };
+
   const filteredAppointments = appointments
     .filter((apt) => filter === 'ALL' || apt.status === filter)
     .sort((a, b) => {
+      // Active statuses first
+      const pa = statusPriority(a.status);
+      const pb = statusPriority(b.status);
+      if (pa !== pb) return pa - pb;
+      // Then ascending by date+time (nearest appointment first)
       const dateA = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
       const dateB = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
-      return dateB - dateA;
+      return dateA - dateB;
     });
 
   if (loading) {

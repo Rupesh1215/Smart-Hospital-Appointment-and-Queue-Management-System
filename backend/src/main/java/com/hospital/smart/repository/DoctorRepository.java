@@ -24,5 +24,7 @@ public interface DoctorRepository extends MongoRepository<Doctor, String> {
 
     boolean existsByEmail(String email);
 
+    boolean existsByDoctorNameIgnoreCase(String doctorName);
+
     boolean existsByUserId(String userId);
 }

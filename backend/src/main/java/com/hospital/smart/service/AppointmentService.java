@@ -264,15 +264,16 @@ public class AppointmentService {
         Appointment oldApt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment", "id", id));
 
-        if (oldApt.getStatus() == AppointmentStatus.COMPLETED ||
-                oldApt.getStatus() == AppointmentStatus.CANCELLED) {
+        if (oldApt.getStatus() == AppointmentStatus.COMPLETED) {
             throw new IllegalStateException(
                     "Cannot reschedule an appointment that is already " + oldApt.getStatus());
         }
 
-        // Cancel the old appointment status
-        oldApt.setStatus(AppointmentStatus.RESCHEDULED);
-        appointmentRepository.save(oldApt);
+        // Cancel/reschedule the old appointment status if not already cancelled
+        if (oldApt.getStatus() != AppointmentStatus.CANCELLED) {
+            oldApt.setStatus(AppointmentStatus.RESCHEDULED);
+            appointmentRepository.save(oldApt);
+        }
 
         // Cancel any active queue entry for the old appointment
         queueRepository.findByAppointmentId(id).ifPresent(q -> {

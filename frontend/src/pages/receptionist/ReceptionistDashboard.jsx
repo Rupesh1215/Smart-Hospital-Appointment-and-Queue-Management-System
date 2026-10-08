@@ -352,7 +352,17 @@ export default function ReceptionistDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {todayApts.slice(0, 10).map((apt) => {
+                {todayApts
+                  .sort((a, b) => {
+                    const statusOrder = { 'IN_CONSULTATION': 0, 'CHECKED_IN': 1, 'IN_QUEUE': 1, 'CONFIRMED': 2, 'PENDING': 2, 'COMPLETED': 3, 'CANCELLED': 4 };
+                    const pa = statusOrder[a.status] ?? 5;
+                    const pb = statusOrder[b.status] ?? 5;
+                    if (pa !== pb) return pa - pb;
+                    const ta = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
+                    const tb = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
+                    return ta - tb;
+                  })
+                  .slice(0, 10).map((apt) => {
                   const canCheckIn = apt.status === 'PENDING' || apt.status === 'CONFIRMED';
                   return (
                     <tr key={apt.id}>

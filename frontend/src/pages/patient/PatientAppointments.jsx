@@ -65,6 +65,17 @@ export default function PatientAppointments() {
 
   const filters = ['ALL', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
 
+  const statusPriority = (s) => {
+    switch (s) {
+      case 'IN_CONSULTATION': return 0;
+      case 'CHECKED_IN': case 'IN_QUEUE': return 1;
+      case 'CONFIRMED': case 'PENDING': return 2;
+      case 'COMPLETED': return 3;
+      case 'CANCELLED': return 4;
+      default: return 5;
+    }
+  };
+
   const filteredAppointments = appointments
     .filter((apt) => filter === 'ALL' || apt.status === filter)
     .filter(
@@ -73,7 +84,17 @@ export default function PatientAppointments() {
         apt.doctorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         apt.departmentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         apt.appointmentNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    )
+    .sort((a, b) => {
+      // Active statuses first
+      const pa = statusPriority(a.status);
+      const pb = statusPriority(b.status);
+      if (pa !== pb) return pa - pb;
+      // Then ascending by date+time (nearest appointment first)
+      const dateA = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
+      const dateB = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
+      return dateA - dateB;
+    });
 
   if (loading) {
     return (
@@ -235,28 +256,46 @@ export default function PatientAppointments() {
                         </span>
                       )
                     )}
-                    {['PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'NO_SHOW', 'CANCELLED'].includes(apt.status) && (
-                      <button
-                        onClick={() => setSelectedRebookApt(apt)}
-                        style={{
-                          background: '#2563EB',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '0.35rem 0.75rem',
-                          fontSize: '0.8rem',
-                          fontWeight: '600',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
-                        }}
-                        title="Rebook an available slot at no extra cost"
-                      >
-                        Rebook Slot (Free) 🔄
-                      </button>
-                    )}
+                    {/* Rebook Slot is enabled ONLY when the patient has missed the appointment */}
+                    {(() => {
+                      const isMissed = ['NO_SHOW', 'MISSED', 'CANCELLED'].includes(apt.status) || (() => {
+                        if (['COMPLETED', 'IN_CONSULTATION'].includes(apt.status)) return false;
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        if (apt.appointmentDate && apt.appointmentDate < todayStr) return true;
+                        if (apt.appointmentDate && apt.appointmentDate === todayStr && apt.startTime) {
+                          const now = new Date();
+                          const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                          const [h, m] = apt.startTime.split(':').map(Number);
+                          return currentMinutes > (h * 60 + m + 15);
+                        }
+                        return false;
+                      })();
+
+                      if (!isMissed) return null;
+
+                      return (
+                        <button
+                          onClick={() => setSelectedRebookApt(apt)}
+                          style={{
+                            background: '#2563EB',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.8rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.3rem',
+                            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
+                          }}
+                          title="Missed appointment? Rebook an available slot at no extra cost"
+                        >
+                          Rebook Missed Slot (Free) 🔄
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
 

@@ -187,23 +187,42 @@ export default function PatientDashboard() {
                   }`}>
                     {apt.status}
                   </span>
-                  <button
-                    onClick={() => setSelectedRebookApt(apt)}
-                    style={{
-                      background: '#EFF6FF',
-                      color: '#2563EB',
-                      border: '1px solid #BFDBFE',
-                      borderRadius: '8px',
-                      padding: '0.25rem 0.6rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      marginLeft: '0.5rem',
-                    }}
-                    title="Can't attend? Rebook slot for free"
-                  >
-                    Rebook (Free) 🔄
-                  </button>
+                  {(() => {
+                    const isMissed = ['NO_SHOW', 'MISSED', 'CANCELLED'].includes(apt.status) || (() => {
+                      if (['COMPLETED', 'IN_CONSULTATION'].includes(apt.status)) return false;
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      if (apt.appointmentDate && apt.appointmentDate < todayStr) return true;
+                      if (apt.appointmentDate && apt.appointmentDate === todayStr && apt.startTime) {
+                        const now = new Date();
+                        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                        const [h, m] = apt.startTime.split(':').map(Number);
+                        return currentMinutes > (h * 60 + m + 15);
+                      }
+                      return false;
+                    })();
+
+                    if (!isMissed) return null;
+
+                    return (
+                      <button
+                        onClick={() => setSelectedRebookApt(apt)}
+                        style={{
+                          background: '#EFF6FF',
+                          color: '#2563EB',
+                          border: '1px solid #BFDBFE',
+                          borderRadius: '8px',
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.75rem',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          marginLeft: '0.5rem',
+                        }}
+                        title="Missed appointment? Rebook slot for free"
+                      >
+                        Rebook (Free) 🔄
+                      </button>
+                    );
+                  })()}
                 </div>
               ))
             )}

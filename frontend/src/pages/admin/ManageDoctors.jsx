@@ -12,6 +12,7 @@ export default function ManageDoctors() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     doctorName: '',
@@ -71,35 +72,55 @@ export default function ManageDoctors() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
+      const payload = {
+        ...formData,
+        departmentId: formData.departmentId || departments[0]?.id || '',
+        phone: formData.phone || '9876543210',
+      };
       if (editingDoctor) {
-        await doctorService.update(editingDoctor.id, formData);
+        await doctorService.update(editingDoctor.id, payload);
         toast.success('Doctor updated successfully');
       } else {
-        if (!formData.password || formData.password.length < 6) {
+        if (!payload.password || payload.password.length < 6) {
           toast.error('Password must be at least 6 characters');
+          setSubmitting(false);
           return;
         }
-        await doctorService.create(formData);
-        toast.success('Doctor added successfully');
+        await doctorService.create(payload);
+        toast.success('Doctor added successfully! 🎉');
       }
       setShowModal(false);
       fetchData();
     } catch (err) {
       console.error('Error saving doctor:', err);
-      const errMsg = err.response?.data?.message || err.response?.data?.data || 'Failed to save doctor details';
-      toast.error(typeof errMsg === 'string' ? errMsg : 'Failed to save doctor details');
+      const errData = err.response?.data;
+      const errMsg = errData?.message || (typeof errData?.data === 'string' ? errData.data : null) || 'Failed to save doctor details';
+      toast.error(errMsg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
+    if (!id) {
+      toast.error('Invalid doctor ID');
+      return;
+    }
     if (!window.confirm('Are you sure you want to delete this doctor?')) return;
     try {
+      setDoctors((prev) => prev.filter((d) => (d.id || d._id) !== id));
       await doctorService.delete(id);
       toast.success('Doctor deleted successfully');
       fetchData();
     } catch (err) {
-      toast.error('Failed to delete doctor');
+      console.error('Error deleting doctor:', err);
+      const errData = err.response?.data;
+      const errMsg = errData?.message || (typeof errData?.data === 'string' ? errData.data : null) || err.message || 'Failed to delete doctor';
+      toast.error(typeof errMsg === 'string' ? errMsg : 'Failed to delete doctor');
+      fetchData();
     }
   };
 
@@ -163,9 +184,10 @@ export default function ManageDoctors() {
                 </tr>
               ) : (
                 filteredDoctors.map((doc) => {
+                  const docId = doc.id || doc._id;
                   const docName = doc.doctorName || doc.name || 'Unknown';
                   return (
-                    <tr key={doc.id}>
+                    <tr key={docId || doc.email}>
                       <td>
                         <div className="docs-name-cell">
                           <div className="docs-avatar">
@@ -179,7 +201,7 @@ export default function ManageDoctors() {
                       <td className="docs-fee-cell">₹{doc.consultationFee || 50}</td>
                       <td className="docs-actions-cell">
                         <button
-                          onClick={() => handleDelete(doc.id)}
+                          onClick={() => handleDelete(docId)}
                           className="docs-delete-btn"
                           title="Delete Doctor"
                         >
@@ -197,11 +219,19 @@ export default function ManageDoctors() {
 
       {/* Add / Edit Modal */}
       {showModal && (
-        <div className="docs-modal-overlay">
+        <div className="docs-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowModal(false); }}>
           <div className="docs-modal-content">
-            <h3 className="docs-modal-title">
-              {editingDoctor ? 'Edit Doctor Profile' : 'Add New Doctor'}
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 className="docs-modal-title" style={{ margin: 0 }}>
+                {editingDoctor ? '✏️ Edit Doctor Profile' : '➕ Add New Doctor'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#94a3b8', lineHeight: 1 }}
+                title="Close"
+              >×</button>
+            </div>
 
             <form onSubmit={handleSubmit} className="docs-modal-form">
               <div className="docs-form-group">
@@ -299,8 +329,9 @@ export default function ManageDoctors() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="docs-submit-btn">
-                  Save Doctor
+                <button type="submit" className="docs-submit-btn" disabled={submitting}
+                  style={{ opacity: submitting ? 0.7 : 1, cursor: submitting ? 'not-allowed' : 'pointer' }}>
+                  {submitting ? '⏳ Saving...' : 'Save Doctor'}
                 </button>
               </div>
             </form>

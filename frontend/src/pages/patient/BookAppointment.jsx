@@ -175,7 +175,7 @@ export default function BookAppointment() {
 
   /* Doctors filtered to selected department */
   const deptDoctors = selectedDept
-    ? doctors.filter((d) => d.departmentId === selectedDept.id && d.isAvailable !== false)
+    ? doctors.filter((d) => (d.departmentId === selectedDept.id || (d.departmentName && selectedDept.name && d.departmentName.toLowerCase() === selectedDept.name.toLowerCase())) && d.isAvailable !== false)
     : doctors.filter((d) => d.isAvailable !== false);
 
   const filteredDoctors = deptDoctors.filter((d) =>

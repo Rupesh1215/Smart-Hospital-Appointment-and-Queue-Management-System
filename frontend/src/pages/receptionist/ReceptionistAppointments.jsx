@@ -60,6 +60,17 @@ export default function ReceptionistAppointments() {
 
   const filters = ['ALL', 'PENDING', 'CONFIRMED', 'CHECKED_IN', 'IN_QUEUE', 'IN_CONSULTATION', 'COMPLETED', 'CANCELLED'];
 
+  const statusPriority = (s) => {
+    switch (s) {
+      case 'IN_CONSULTATION': return 0;
+      case 'CHECKED_IN': case 'IN_QUEUE': return 1;
+      case 'CONFIRMED': case 'PENDING': return 2;
+      case 'COMPLETED': return 3;
+      case 'CANCELLED': return 4;
+      default: return 5;
+    }
+  };
+
   const filtered = appointments
     .filter((a) => filter === 'ALL' || a.status === filter)
     .filter((a) =>
@@ -69,9 +80,14 @@ export default function ReceptionistAppointments() {
       a.appointmentNumber?.toLowerCase().includes(search.toLowerCase())
     )
     .sort((a, b) => {
+      // Active statuses first
+      const pa = statusPriority(a.status);
+      const pb = statusPriority(b.status);
+      if (pa !== pb) return pa - pb;
+      // Then ascending by date+time (nearest appointment first)
       const da = new Date(`${a.appointmentDate}T${a.startTime || '00:00'}`);
       const db = new Date(`${b.appointmentDate}T${b.startTime || '00:00'}`);
-      return db - da;
+      return da - db;
     });
 
   const statusBadgeClass = (status) => {

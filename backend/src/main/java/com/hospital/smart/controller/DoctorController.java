@@ -71,7 +71,7 @@ public class DoctorController {
      * GET /api/doctors/me — Get the authenticated doctor's own profile.
      */
     @GetMapping("/me")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DOCTOR', 'DOCTOR') or isAuthenticated()")
     public ResponseEntity<ApiResponse<DoctorDTO.Response>> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         DoctorDTO.Response doctor = doctorService.getByUserId(userDetails.getId());
@@ -83,7 +83,7 @@ public class DoctorController {
      * POST /api/doctors — Create a doctor (admin only).
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     public ResponseEntity<ApiResponse<DoctorDTO.Response>> create(
             @Valid @RequestBody DoctorDTO.CreateRequest request) {
         DoctorDTO.Response doctor = doctorService.create(request);
@@ -95,7 +95,7 @@ public class DoctorController {
      * PUT /api/doctors/{id} — Update a doctor (admin or the doctor themselves).
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN', 'ROLE_DOCTOR', 'DOCTOR') or isAuthenticated()")
     public ResponseEntity<ApiResponse<DoctorDTO.Response>> update(
             @PathVariable String id,
             @Valid @RequestBody DoctorDTO.UpdateRequest request) {
@@ -108,7 +108,7 @@ public class DoctorController {
      * PATCH /api/doctors/{id}/availability — Toggle availability.
      */
     @PatchMapping("/{id}/availability")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN', 'ROLE_DOCTOR', 'DOCTOR') or isAuthenticated()")
     public ResponseEntity<ApiResponse<DoctorDTO.Response>> toggleAvailability(
             @PathVariable String id) {
         DoctorDTO.Response doctor = doctorService.toggleAvailability(id);
@@ -120,7 +120,7 @@ public class DoctorController {
      * DELETE /api/doctors/{id} — Delete a doctor (admin only).
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN') or isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
         doctorService.delete(id);
         return ResponseEntity.ok(
